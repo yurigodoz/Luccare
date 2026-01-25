@@ -1,55 +1,86 @@
-# dEficiente
+# 🧡 LuccaCare
 
-Sistema de gerenciamento de rotinas e cuidados para dependentes (crianças, pessoas com deficiência ou necessidades especiais), permitindo o acompanhamento diário de atividades como medicação, alimentação, terapias e outras tarefas essenciais.
+Sistema de gerenciamento de rotinas e cuidados para pessoas com necessidades especiais, com foco em organização, acompanhamento e tranquilidade para famílias e cuidadores.
 
 ## 🎯 Objetivo
 
-Centralizar e organizar a rotina de cuidados, permitindo que responsáveis e cuidadores:
+O **LuccaCare** foi criado para ajudar responsáveis a organizarem e acompanharem a rotina diária de dependentes, como:
 
-- Cadastrem dependentes
-- Definam rotinas recorrentes (ex: remédios, alimentação, terapias)
-- Registrem a execução das rotinas
-- Acompanhem histórico e atrasos
-- Visualizem um dashboard diário com pendências e tarefas concluídas
+- Medicações
+- Alimentação
+- Terapias
+- Atividades recorrentes
+- Acompanhamento de execução e atrasos
+
+Tudo de forma centralizada, segura e com histórico completo.
+
+## 💙 Motivação
+
+Este projeto nasceu a partir da experiência real de cuidado com o **Lucca**, uma criança com necessidades especiais que exige uma rotina estruturada, atenção constante e coordenação entre diferentes responsáveis.
+
+O LuccaCare é, ao mesmo tempo, um projeto de estudo em engenharia de software e uma ferramenta que busca trazer mais organização, previsibilidade e qualidade de vida para famílias em situações semelhantes.
 
 ## 🧱 Arquitetura
 
-O projeto segue uma arquitetura em camadas:
-Controller → Service → Repository → Prisma ORM → PostgreSQL
+O backend segue uma arquitetura em camadas:
 
-Separando:
+### Controller → Service → Repository → Prisma ORM → PostgreSQL
 
-- **Controllers**: camada HTTP (Express)
-- **Services**: regras de negócio
-- **Repositories**: acesso a dados
+Camadas bem definidas:
+
+- **Controllers**: Camada HTTP (Express)
+- **Services**: Regras de negócio
+- **Repositories**: Acesso a dados
 - **Prisma**: ORM e migrations
-- **PostgreSQL**: persistência
+- **PostgreSQL**: Banco de dados relacional
 
 ## 🗄️ Modelo de Dados (v1.0.0)
 
-Principais entidades:
+Entidades principais:
 
-- **User**: responsáveis e cuidadores
-- **Dependent**: criança/pessoa assistida
-- **DependentUser**: vínculo N:N com papéis (PARENT, CAREGIVER, etc.)
-- **Routine**: rotinas recorrentes
-- **RoutineLog**: histórico de execução das rotinas
+- **User**: Responsáveis e cuidadores
+- **Dependent**: Pessoa assistida (ex: criança)
+- **DependentUser**: Vínculo N:N com papéis (PAI, MÃE, CUIDADOR, etc.)
+- **Routine**: Rotinas recorrentes (remédios, alimentação, terapias)
+- **RoutineLog**: Registro de execução das rotinas (histórico)
 
-## 🔐 Autenticação
+## 🔐 Autenticação e Segurança
 
-- JWT (JSON Web Token)
+- Autenticação via JWT
 - Controle de acesso por dependente
 - Papéis e permissões por vínculo
+- Todas as rotas protegidas por middleware
 
-## 📊 Funcionalidades atuais
+## 📊 Funcionalidades (v1.0.0)
 
 - Cadastro e login de usuários
 - Cadastro de dependentes
-- Compartilhamento de dependentes entre usuários
+- Compartilhamento de dependentes entre responsáveis
 - Criação de rotinas recorrentes
 - Registro de execução (histórico)
-- Dashboard diário
+- Dashboard diário de pendências
 - Monitor automático de horários
+
+## 📡 API – Principais Endpoints
+
+### Autenticação
+- `POST /auth/register`
+- `POST /auth/login`
+
+### Dependentes
+- `POST /dependents`
+- `GET /dependents`
+
+### Rotinas
+- `POST /dependents/:dependentId/routines`
+- `GET /dependents/:dependentId/routines`
+
+### Execução / Histórico
+- `POST /routines/:routineId/logs`
+- `GET /routines/:routineId/logs`
+
+### Dashboard
+- `GET /dashboard/today`
 
 ## 🛠️ Tecnologias
 
@@ -58,7 +89,7 @@ Principais entidades:
 - PostgreSQL
 - Prisma ORM
 - JWT
-- Git (monorepo)
+- Git (Monorepo)
 
 ## ▶️ Como rodar o projeto
 
@@ -68,31 +99,31 @@ Principais entidades:
 - PostgreSQL
 - Git
 
-### Passos
+### Instalação
 
-bash
-git clone https://github.com/SEU_USUARIO/deficiente.git
-cd deficiente/backend
+```bash
+git clone https://github.com/SEU_USUARIO/luccacare.git
+cd luccacare/backend
 npm install
+```
 
-Crie um arquivo .env:
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/deficiente_db"
+### Crie o arquivo .env:
+DATABASE_URL="postgresql://usuario:senha@localhost:5432/luccacare_db"
 JWT_SECRET="sua_chave_secreta"
 
-Rode as migrations:
+```bash
+# Execute as migrations:
 npx prisma migrate dev
 
-Inicie a aplicação:
+# Inicie o servidor
 npm run dev
+```
 
-A API estará disponível em:
+### API disponível em:
 http://localhost:3000
 
+# 🏷️ Versionamento
 
-## 📌 Versionamento
-Este projeto segue Semantic Versioning.
+O projeto segue Semantic Versioning.
+
 Versão atual: v1.0.0
-
-## ❤️ Motivação
-
-Este projeto nasceu da necessidade real de organizar a rotina de cuidados de uma criança com necessidades especiais, buscando unir tecnologia, organização e qualidade de vida para toda a família.
