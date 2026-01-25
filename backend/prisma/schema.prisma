@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      String
+  createdAt DateTime @default(now())
+
+  dependents DependentUser[]
+}
+
+model Dependent {
+  id        Int       @id @default(autoincrement())
+  name      String
+  birthDate DateTime?
+  notes     String?
+  createdAt DateTime  @default(now())
+
+  users    DependentUser[]
+  routines Routine[]
+}
+
+model DependentUser {
+  userId      Int
+  dependentId Int
+  role        String
+
+  user      User      @relation(fields: [userId], references: [id])
+  dependent Dependent @relation(fields: [dependentId], references: [id])
+
+  @@id([userId, dependentId])
+}
+
+model Routine {
+  id          Int      @id @default(autoincrement())
+  dependentId Int
+  type        String
+  title       String
+  description String?
+  times       String[]
+  daysOfWeek  Int[]
+  active      Boolean  @default(true)
+  createdBy   Int
+  createdAt   DateTime @default(now())
+
+  dependent Dependent    @relation(fields: [dependentId], references: [id])
+  logs      RoutineLog[]
+}
+
+model RoutineLog {
+  id        Int      @id @default(autoincrement())
+  routineId Int
+  dateTime  DateTime
+  status    String
+  doneBy    Int
+  notes     String?
+
+  routine Routine @relation(fields: [routineId], references: [id])
+}
