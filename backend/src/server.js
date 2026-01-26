@@ -1,4 +1,6 @@
+const dotenv = require('dotenv');
 const express = require('express');
+const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/authRoutes');
@@ -12,6 +14,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./docs/swagger');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use('/users', userRoutes);
@@ -35,4 +38,4 @@ app.listen(3000, () => {
 });
 
 // Senha superuser Postgres Windows: D3f@ultP0stgr3s!
-// Senha dEficiente_user Postgres Windows: D3f@ultU$er!
+// Senha luccare_user Postgres Windows: D3f@ultU$er!

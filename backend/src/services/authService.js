@@ -1,9 +1,8 @@
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const userRepository = require('../repositories/userRepository');
 const BusinessError = require('../errors/BusinessError');
-
-const JWT_SECRET = 'chave-super-secreta'; // depois mover para env
 
 async function login(email, password) {
     const user = await userRepository.findByEmail(email);
@@ -19,7 +18,7 @@ async function login(email, password) {
 
     const token = jwt.sign(
         { id: user.id, role: user.role },
-        JWT_SECRET,
+        process.env.JWT_SECRET,
         { expiresIn: '1h' }
     );
 

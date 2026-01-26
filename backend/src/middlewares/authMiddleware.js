@@ -1,6 +1,5 @@
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = 'chave-super-secreta'; // depois mover para env
 
 function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization;
@@ -22,7 +21,7 @@ function authMiddleware(req, res, next) {
     }
     
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded; // { id, role }
         next();
     } catch (err) {
