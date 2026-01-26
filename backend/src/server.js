@@ -8,6 +8,8 @@ const routineRoutes = require('./routes/routineRoutes');
 const routineLogRoutes = require('./routes/routineLogRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const { startRoutineMonitor } = require('./services/routineMonitor');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./docs/swagger');
 
 const app = express();
 app.use(express.json());
@@ -19,6 +21,7 @@ app.use('/dependents', dependentsShareRoutes);
 app.use('/dependents', routineRoutes);
 app.use('/', routineLogRoutes);
 app.use('/dashboard', dashboardRoutes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(errorHandler);
 
 //startRoutineMonitor();

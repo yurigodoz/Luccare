@@ -1,26 +1,27 @@
 const dependentUserRepository = require('../repositories/dependentUserRepository');
 const userRepository = require('../repositories/userRepository');
+const BusinessError = require('../errors/BusinessError');
 
-function shareDependent(dependentId, ownerId, targetEmail, role) {
-    const ownerLinl = dependentUserRepository.findLink(dependentId, ownerId);
+async function shareDependent(dependentId, ownerId, targetEmail, role) {
+    const ownerLink = await dependentUserRepository.findLink(dependentId, ownerId);
 
-    if (!ownerLinl || ownerLinl.role !== 'PARENT') {
-        throw new Error('Você não tem permissão para compartilhar este dependente.');
+    if (!ownerLink || ownerLink.role !== 'PARENT') {
+        throw new BusinessError('Você não tem permissão para compartilhar este dependente.');
     }
 
-    const targetUser = userRepository.findByEmail(targetEmail);
+    const targetUser = await userRepository.findByEmail(targetEmail);
 
     if (!targetUser) {
-        throw new Error('Usuário não encontrado.');
+        throw new BusinessError('Usuário não encontrado.');
     }
 
-    const existingLink = dependentUserRepository.findLink(dependentId, targetUser.id);
+    const existingLink = await dependentUserRepository.findLink(dependentId, targetUser.id);
 
     if (existingLink) {
-        throw new Error('Usuário já possui acesso a este dependente.');
+        throw new BusinessError('Usuário já possui acesso a este dependente.');
     }
 
-    return dependentUserRepository.addLink(dependentId, targetUser.id, role);
+    return await dependentUserRepository.addLink(dependentId, targetUser.id, role);
 }
 
 module.exports = { shareDependent };

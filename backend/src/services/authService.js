@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const userRepository = require('../repositories/userRepository');
+const BusinessError = require('../errors/BusinessError');
 
 const JWT_SECRET = 'chave-super-secreta'; // depois mover para env
 
@@ -8,12 +9,12 @@ async function login(email, password) {
     const user = await userRepository.findByEmail(email);
 
     if (!user) {
-        throw new Error('Usuário não encontrado');
+        throw new BusinessError('Usuário não encontrado');
     }
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-        throw new Error('Senha inválida');
+        throw new BusinessError('Senha inválida');
     }
 
     const token = jwt.sign(

@@ -1,9 +1,10 @@
 const dependentRepository = require('../repositories/dependentRepository');
 const dependentUserRepository = require('../repositories/dependentUserRepository');
+const BusinessError = require('../errors/BusinessError');
 
 async function createDependent(data, userId) {
     if (!data.name) {
-        throw new Error('Nome do dependente é obrigatório');
+        throw new BusinessError('Nome do dependente é obrigatório');
     }
 
     const dependent = await dependentRepository.create({
