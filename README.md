@@ -82,6 +82,28 @@ Entidades principais:
 ### Dashboard
 - `GET /dashboard/today`
 
+## 📚 Documentação da API (Swagger)
+
+A API do **LuccaCare** está documentada utilizando **OpenAPI (Swagger)**, com interface interativa para testes.
+
+Após subir o backend, acesse:
+http://localhost:3000/api-docs
+
+Na interface do Swagger você poderá:
+
+- Visualizar todos os endpoints da API
+- Ver exemplos de payloads
+- Autenticar usando JWT (botão **Authorize**)
+- Testar as rotas diretamente pelo navegador
+
+### Autenticação no Swagger
+
+1. Faça login pelo endpoint `/auth/login`
+2. Copie o token JWT retornado
+3. Clique em **Authorize** no canto superior direito
+4. Cole (sem "Bearer" no começo)
+5. Confirme. Agora todas as rotas protegidas poderão ser testadas.
+
 ## 🛠️ Tecnologias
 
 - Node.js
@@ -122,7 +144,7 @@ npm run dev
 ### API disponível em:
 http://localhost:3000
 
-# 🏷️ Versionamento
+## 🏷️ Versionamento
 
 O projeto segue Semantic Versioning.
 
