@@ -12,6 +12,14 @@ async function create(log) {
     });
 }
 
+async function updateNotes(logId, notes) {
+    return prisma.routineLog.update({
+        where: { id: logId },
+        data: { notes },
+    });
+}
+
+
 async function findByRoutine(routineId) {
     return prisma.routineLog.findMany({
         where: { routineId },
@@ -19,7 +27,26 @@ async function findByRoutine(routineId) {
     });
 }
 
+async function findById(id) {
+    return prisma.routineLog.findUnique({
+        where: { id },
+        include: {
+            routine: {
+                include: {
+                    dependent: {
+                        include: {
+                            users: true, // relação DependentUser
+                        },
+                    },
+                },
+            },
+        },
+    });
+}
+
 module.exports = {
     create,
-    findByRoutine
+    updateNotes,
+    findByRoutine,
+    findById
 };

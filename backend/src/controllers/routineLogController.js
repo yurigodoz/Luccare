@@ -56,6 +56,57 @@ async function execute(req, res, next) {
 
 /**
  * @swagger
+ * /routines/logs/{logId}:
+ *   put:
+ *     summary: Atualiza observação de um log de rotina
+ *     tags: [RoutineLogs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: logId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - notes
+ *             properties:
+ *               notes:
+ *                 type: string
+ *                 example: "Tomou com dificuldade"
+ *     responses:
+ *       200:
+ *         description: Observação atualizada com sucesso
+ *       404:
+ *         description: Log não encontrado
+ */
+
+async function updateNotes(req, res, next) {
+    try {
+        const { logId } = req.params;
+        const { notes } = req.body;
+
+        const updated = await routineLogService.updateLogNotes(
+            Number(logId),
+            req.user.id,
+            notes
+        );
+
+        res.json(updated);
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+/**
+ * @swagger
  * /routines/{routineId}/logs:
  *   get:
  *     summary: Lista o histórico de execuções de uma rotina
@@ -92,5 +143,6 @@ async function listByRoutine(req, res, next) {
 
 module.exports = {
     execute,
+    updateNotes,
     listByRoutine
 };

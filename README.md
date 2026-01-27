@@ -1,10 +1,10 @@
-# 🧡 LuccaCare
+# 🧡 Luccare
 
 Sistema de gerenciamento de rotinas e cuidados para pessoas com necessidades especiais, com foco em organização, acompanhamento e tranquilidade para famílias e cuidadores.
 
 ## 🎯 Objetivo
 
-O **LuccaCare** foi criado para ajudar responsáveis a organizarem e acompanharem a rotina diária de dependentes, como:
+O **Luccare** foi criado para ajudar responsáveis a organizarem e acompanharem a rotina diária de dependentes, como:
 
 - Medicações
 - Alimentação
@@ -18,7 +18,7 @@ Tudo de forma centralizada, segura e com histórico completo.
 
 Este projeto nasceu a partir da experiência real de cuidado com o **Lucca**, uma criança com necessidades especiais que exige uma rotina estruturada, atenção constante e coordenação entre diferentes responsáveis.
 
-O LuccaCare é, ao mesmo tempo, um projeto de estudo em engenharia de software e uma ferramenta que busca trazer mais organização, previsibilidade e qualidade de vida para famílias em situações semelhantes.
+O Luccare é, ao mesmo tempo, um projeto de estudo em engenharia de software e uma ferramenta que busca trazer mais organização, previsibilidade e qualidade de vida para famílias em situações semelhantes.
 
 ## 🧱 Arquitetura
 
@@ -84,7 +84,7 @@ Entidades principais:
 
 ## 📚 Documentação da API (Swagger)
 
-A API do **LuccaCare** está documentada utilizando **OpenAPI (Swagger)**, com interface interativa para testes.
+A API do **Luccare** está documentada utilizando **OpenAPI (Swagger)**, com interface interativa para testes.
 
 Após subir o backend, acesse:
 http://localhost:3000/api-docs
@@ -124,13 +124,13 @@ Na interface do Swagger você poderá:
 ### Instalação
 
 ```bash
-git clone https://github.com/SEU_USUARIO/luccacare.git
-cd luccacare/backend
+git clone https://github.com/yurigodoz/Luccare.git
+cd luccare/backend
 npm install
 ```
 
 ### Crie o arquivo .env:
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/luccacare_db"
+DATABASE_URL="postgresql://usuario:senha@localhost:5432/luccare_db"
 JWT_SECRET="sua_chave_secreta"
 
 ```bash

@@ -24,6 +24,24 @@ async function registerExecution(routineId, userId, status, notes) {
     });
 }
 
+async function updateLogNotes(logId, userId, notes) {
+    const log = await routineLogRepository.findById(logId);
+
+    if (!log) {
+        throw new BusinessError('Log não encontrado');
+    }
+
+    const hasAccess = log.routine.dependent.users.some(
+        link => link.userId === userId
+    );
+
+    if (!hasAccess) {
+        throw new BusinessError('Você não tem permissão para alterar este log.');
+    }
+
+    return routineLogRepository.updateNotes(logId, notes);
+}
+
 async function listByRoutine(routineId, userId) {
     const routine = await routineRepository.findById(routineId);
     console.log(routine);
@@ -40,5 +58,6 @@ async function listByRoutine(routineId, userId) {
 
 module.exports = {
     registerExecution,
+    updateLogNotes,
     listByRoutine
 };
