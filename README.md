@@ -121,7 +121,7 @@ Na interface do Swagger você poderá:
 - PostgreSQL
 - Git
 
-### Instalação
+### Instalação backend
 
 ```bash
 git clone https://github.com/yurigodoz/Luccare.git
@@ -130,8 +130,10 @@ npm install
 ```
 
 ### Crie o arquivo .env:
+```
 DATABASE_URL="postgresql://usuario:senha@localhost:5432/luccare_db"
 JWT_SECRET="sua_chave_secreta"
+```
 
 ```bash
 # Execute as migrations:
