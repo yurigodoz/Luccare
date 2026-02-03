@@ -141,8 +141,82 @@ async function listByRoutine(req, res, next) {
     }
 }
 
+/**
+ * @swagger
+ * /schedules/{scheduleId}/done:
+ *   patch:
+ *     summary: Marca um horário específico da rotina como concluído
+ *     description: Cria ou atualiza o log de execução de um RoutineSchedule
+ *     tags: [RoutineLogs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: scheduleId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID do schedule (evento do dia)
+ *         example: 1
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               notes:
+ *                 type: string
+ *                 example: "Tomou após o café"
+ *     responses:
+ *       200:
+ *         description: Log criado/atualizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 scheduleId:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *                   example: DONE
+ *                 notes:
+ *                   type: string
+ *                 doneAt:
+ *                   type: string
+ *                   format: date-time
+ *       403:
+ *         description: Usuário sem permissão
+ *       404:
+ *         description: Schedule não encontrado
+ *       401:
+ *         description: Não autenticado
+ */
+
+async function markDone(req, res, next) {
+    try {
+        const scheduleId = Number(req.params.scheduleId);
+        const { notes } = req.body;
+
+        const log = await routineLogService.markScheduleDone(
+            scheduleId,
+            req.user.id,
+            notes
+        );
+
+        res.json(log);
+
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     execute,
     updateNotes,
-    listByRoutine
+    listByRoutine,
+    markDone
 };

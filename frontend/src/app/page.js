@@ -19,7 +19,7 @@ export default function LoginPage() {
       });
 
       localStorage.setItem('token', data.token);
-      window.location.href = '/dashboard/dependents';
+      window.location.href = '/dependents';
     } catch (err) {
       setError(err.message);
     }

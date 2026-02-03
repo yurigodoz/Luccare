@@ -6,37 +6,73 @@ async function getTodayOverview(userId) {
     const dependentIds = links.map(l => l.dependentId);
 
     const today = new Date();
-    const dayOfWeek = today.getDay(); // 0..6
+    today.setHours(0, 0, 0, 0);
 
     const routines = await prisma.routine.findMany({
         where: {
-                dependentId: { in: dependentIds },
-                active: true,
-                daysOfWeek: { has: dayOfWeek }
-            },
-            include: {
-                logs: {
-                where: {
-                    dateTime: {
-                        gte: new Date(today.toDateString())
-                    }
-                }
-            }
+            dependentId: { in: dependentIds },
+            active: true,
+            daysOfWeek: { has: today.getDay() }
         }
     });
 
-    const result = routines.map(r => {
-    const doneToday = r.logs.length > 0;
-    return {
-        routineId: r.id,
-        title: r.title,
-        dependentId: r.dependentId,
-        times: r.times,
-        doneToday
-        };
+    for (const r of routines) {
+        for (const time of r.times) {
+            await prisma.routineSchedule.upsert({
+                where: {
+                    dependentId_scheduledDate_scheduledTime_routineId: {
+                        dependentId: r.dependentId,
+                        scheduledDate: today,
+                        scheduledTime: time,
+                        routineId: r.id,
+                    }
+                },
+                create: {
+                    dependentId: r.dependentId,
+                    routineId: r.id,
+                    scheduledDate: today,
+                    scheduledTime: time,
+                },
+                update: {}
+            });
+        }
+    }
+
+    const schedules = await prisma.routineSchedule.findMany({
+        where: {
+            dependentId: { in: dependentIds },
+            scheduledDate: today,
+        },
+        include: {
+            routine: true,
+            logs: true,
+            dependent: true,
+        },
+        orderBy: {
+            scheduledTime: 'asc'
+        }
     });
 
-    return result;
+    const grouped = {};
+
+    for (const s of schedules) {
+        if (!grouped[s.dependentId]) {
+            grouped[s.dependentId] = {
+                dependentId: s.dependentId,
+                dependentName: s.dependent.name,
+                items: []
+            };
+        }
+
+        grouped[s.dependentId].items.push({
+            scheduleId: s.id,
+            title: s.routine.title,
+            time: s.scheduledTime,
+            done: s.logs.length > 0
+        });
+    }
+
+    return Object.values(grouped);
 }
 
 module.exports = {

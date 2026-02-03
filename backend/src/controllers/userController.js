@@ -37,7 +37,7 @@ const userService = require('../services/userService');
  *         description: Dados inválidos
  */
 
-async function create(req, res) {
+async function create(req, res, next) {
     try {
         const user = await userService.createUser(req.body);
         res.status(201).json(user);

@@ -2,6 +2,7 @@ const routineLogRepository = require('../repositories/routineLogRepository');
 const routineRepository = require('../repositories/routineRepository');
 const dependentUserRepository = require('../repositories/dependentUserRepository');
 const BusinessError = require('../errors/BusinessError');
+const prisma = require('../database/prisma');
 
 async function registerExecution(routineId, userId, status, notes) {
     const routine = await routineRepository.findById(routineId);
@@ -56,8 +57,49 @@ async function listByRoutine(routineId, userId) {
     return await routineLogRepository.findByRoutine(routineId);
 }
 
+async function markScheduleDone(scheduleId, userId, notes) {
+    const schedule = await prisma.routineSchedule.findUnique({
+        where: { id: scheduleId },
+        include: {
+            dependent: {
+                include: {
+                    users: true
+                }
+            }
+        }
+    });
+
+    if (!schedule) {
+        throw new BusinessError('Agendamento não encontrado!');
+    }
+
+    const hasAccess = schedule.dependent.users.some(
+        u => u.userId === userId
+    );
+
+    if (!hasAccess) {
+        throw new BusinessError('Sem permissão!');
+    }
+
+    return prisma.routineLog.upsert({
+        where: { scheduleId },
+        create: {
+            scheduleId,
+            status: 'DONE',
+            notes,
+            doneBy: userId,
+        },
+        update: {
+            status: 'DONE',
+            notes,
+            doneBy: userId,
+        }
+    });
+}
+
 module.exports = {
     registerExecution,
     updateLogNotes,
-    listByRoutine
+    listByRoutine,
+    markScheduleDone
 };

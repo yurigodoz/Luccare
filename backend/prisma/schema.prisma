@@ -31,8 +31,9 @@ model Dependent {
   notes     String?
   createdAt DateTime  @default(now())
 
-  users    DependentUser[]
-  routines Routine[]
+  users            DependentUser[]
+  routines         Routine[]
+  routineSchedules RoutineSchedule[]
 }
 
 model DependentUser {
@@ -58,17 +59,47 @@ model Routine {
   createdBy   Int
   createdAt   DateTime @default(now())
 
-  dependent Dependent    @relation(fields: [dependentId], references: [id])
-  logs      RoutineLog[]
+  dependent        Dependent         @relation(fields: [dependentId], references: [id])
+  logs             RoutineLog[]
+  routineSchedules RoutineSchedule[]
 }
 
 model RoutineLog {
-  id        Int      @id @default(autoincrement())
-  routineId Int
-  dateTime  DateTime
-  status    String
-  doneBy    Int
-  notes     String?
+  id       Int      @id @default(autoincrement())
+  dateTime DateTime @default(now())
+  status   String
+  doneBy   Int
+  notes    String?
 
-  routine Routine @relation(fields: [routineId], references: [id])
+  scheduleId Int?             @unique
+  schedule   RoutineSchedule? @relation(fields: [scheduleId], references: [id])
+  routine    Routine?         @relation(fields: [routineId], references: [id])
+  routineId  Int?
+}
+
+model RoutineSchedule {
+  id Int @id @default(autoincrement())
+
+  routineId   Int
+  dependentId Int
+
+  scheduledDate DateTime
+  scheduledTime String
+
+  status ScheduleStatus @default(PENDING)
+
+  routine   Routine   @relation(fields: [routineId], references: [id])
+  dependent Dependent @relation(fields: [dependentId], references: [id])
+
+  createdAt DateTime     @default(now())
+  logs      RoutineLog[]
+
+  @@unique([dependentId, scheduledDate, scheduledTime, routineId])
+}
+
+enum ScheduleStatus {
+  PENDING
+  DONE
+  SKIPPED
+  CANCELED
 }

@@ -8,13 +8,23 @@ async function createUser(data) {
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
-        
-    return userRepository.create({
-        name: data.name,
-        email: data.email,
-        passwordHash,
-        role: data.role || 'PARENT'
-    });
+    
+    let user = {}
+
+    try {
+        user = await userRepository.create({
+            name: data.name,
+            email: data.email,
+            passwordHash,
+            role: data.role || 'PARENT'
+        });
+    } catch (err) {
+        console.log('Erro ao criar usuário:');
+        console.log(err);
+        throw new BusinessError('Erro ao criar usuário!');
+    }
+
+    return user;
 }
 
 async function listUsers() {
