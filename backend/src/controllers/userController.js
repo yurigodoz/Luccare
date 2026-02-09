@@ -23,13 +23,10 @@ const userService = require('../services/userService');
  *                 example: "Yuri Tuan Godoz"
  *               email:
  *                 type: string
- *                 example: "yuri@godoz.dev.br"
+ *                 example: "meu@email.com"
  *               password:
  *                 type: string
  *                 example: "123456"
- *               role:
- *                 type: string
- *                 example: "PARENT"
  *     responses:
  *       201:
  *         description: Usuário criado com sucesso

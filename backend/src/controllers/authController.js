@@ -18,7 +18,7 @@ const authService = require('../services/authService');
  *             properties:
  *               email:
  *                 type: string
- *                 example: "yuri@godoz.dev.br"
+ *                 example: "meu@email.com"
  *               password:
  *                 type: string
  *                 example: "123456"

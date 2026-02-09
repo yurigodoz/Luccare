@@ -5,9 +5,7 @@ async function create(user) {
         data: {
             id: user.id,
             name: user.name,
-            email: user.email,
-            password: user.passwordHash,
-            role: user.role
+            email: user.email
         }
     });
 }
