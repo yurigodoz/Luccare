@@ -1,8 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function DashboardPage() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
+  );
+}
+
+function DashboardContent() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 

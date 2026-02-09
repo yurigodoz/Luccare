@@ -38,7 +38,7 @@ const shareService = require('../services/dependentShareService');
 async function share(req, res, next) {
     try {
         const {dependentId, email, role } = req.body;
-        const result = await shareService.shareDependent(dependentId, req.user.id, email, role);
+        const result = await shareService.shareDependent(dependentId, req.userId, email, role);
         res.status(201).json(result);
     } catch (err) {
         next(err); // Joga para o middleware central

@@ -61,9 +61,13 @@ async function create(req, res, next) {
  *         description: Não autorizado
  */
 
-async function list(req, res) {
-    const users = await userService.listUsers();
-    res.json(users);
+async function list(req, res, next) {
+    try {
+        const users = await userService.listUsers();
+        res.json(users);
+    } catch (err) {
+        next(err);
+    }
 }
 
 module.exports = {

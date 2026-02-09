@@ -1,36 +1,33 @@
 require('dotenv').config();
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const userRepository = require('../repositories/userRepository');
 const BusinessError = require('../errors/BusinessError');
 
 async function login(email, password) {
-    const user = await userRepository.findByEmail(email);
-
-    if (!user) {
-        throw new BusinessError('Usuário não encontrado');
+    if (!email || !password) {
+        throw new BusinessError('E-mail e senha são obrigatórios!');
     }
 
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-        throw new BusinessError('Senha inválida');
-    }
+    try {
+        const response = await fetch(`${process.env.AUTH_API_URL}/auth/login`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                email: email,
+                password: password,
+                app: process.env.AUTH_API_APP_SLUG
+            })
+        });
 
-    const token = jwt.sign(
-        { id: user.id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-    );
-
-    return {
-        token,
-        user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
+        if (!response.ok) {
+            const err = await response.json();
+            throw new BusinessError(err.message || 'Credenciais inválidas');
         }
-    };
-}
 
+        const authResponse = await response.json();
+
+        return authResponse;
+    } catch (err) {
+        console.log('Erro no login Auth Service:', err);
+        throw new BusinessError('Erro ao fazer login no serviço de autenticação!');
+    }
+}
 module.exports = { login };

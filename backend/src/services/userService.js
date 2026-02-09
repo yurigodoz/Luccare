@@ -1,4 +1,3 @@
-const bcrypt = require('bcrypt');
 const userRepository = require('../repositories/userRepository');
 const BusinessError = require('../errors/BusinessError');
 
@@ -7,20 +6,41 @@ async function createUser(data) {
         throw new BusinessError('Nome, e-mail e senha são obrigatórios!');
     }
 
-    const passwordHash = await bcrypt.hash(data.password, 10);
-    
-    let user = {}
+    let authUser;
+
+    try {
+        const response = await fetch(`${process.env.AUTH_API_URL}/auth/register`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                email: data.email,
+                password: data.password,
+                app: process.env.AUTH_API_APP_SLUG
+            })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new BusinessError(JSON.stringify(err));
+        }
+
+        authUser = await response.json();
+
+    } catch (err) {
+        console.log('Erro ao chamar Auth Service:', err);
+        throw new BusinessError('Erro ao registrar usuário no serviço de autenticação!');
+    }
+
+    let user = {};
 
     try {
         user = await userRepository.create({
+            id: authUser.id,
             name: data.name,
-            email: data.email,
-            passwordHash,
-            role: data.role || 'PARENT'
-        });
+            email: authUser.email
+    });
     } catch (err) {
-        console.log('Erro ao criar usuário:');
-        console.log(err);
+        console.log('Erro ao criar usuário no Luccare:', err);
         throw new BusinessError('Erro ao criar usuário!');
     }
 
