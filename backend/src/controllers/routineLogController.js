@@ -43,7 +43,7 @@ async function execute(req, res, next) {
 
         const log = await routineLogService.registerExecution(
             Number(routineId),
-            req.user.id,
+            req.userId,
             status,
             notes
         );
@@ -94,7 +94,7 @@ async function updateNotes(req, res, next) {
 
         const updated = await routineLogService.updateLogNotes(
             Number(logId),
-            req.user.id,
+            req.userId,
             notes
         );
 
@@ -132,7 +132,7 @@ async function listByRoutine(req, res, next) {
 
         const logs = await routineLogService.listByRoutine(
             Number(routineId),
-            req.user.id
+            req.userId
         );
 
         res.json(logs);
@@ -203,7 +203,7 @@ async function markDone(req, res, next) {
 
         const log = await routineLogService.markScheduleDone(
             scheduleId,
-            req.user.id,
+            req.userId,
             notes
         );
 

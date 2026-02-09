@@ -1,12 +1,56 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiFetch } from '@/services/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isWarmingUp, setIsWarmingUp] = useState(true);
+
+  // Wake up backend na inicialização da página de login
+  useEffect(() => {
+    const wakeUpBackend = async () => {
+      let attempts = 0;
+      const maxAttempts = 30;
+      const delayBetweenAttempts = 1000; // 1 segundo
+
+      const tryHealth = async () => {
+        while (attempts < maxAttempts) {
+          try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`, {
+              method: 'GET',
+            });
+
+            console.log(`Health check attempt ${attempts + 1}: ${response.status}`);
+
+            if (response.status === 200) {
+              console.log('Servidor acordado com sucesso!');
+              setIsWarmingUp(false);
+              return;
+            }
+          } catch (err) {
+            console.log(`Health check attempt ${attempts + 1} failed:`, err.message);
+          }
+
+          attempts++;
+
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, delayBetweenAttempts));
+          }
+        }
+
+        // Se chegou aqui, esgotou as 15 tentativas
+        console.log('Esgotadas as 15 tentativas. Liberando botão mesmo assim.');
+        setIsWarmingUp(false);
+      };
+
+      tryHealth();
+    };
+
+    wakeUpBackend();
+  }, []);
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -18,7 +62,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.accessToken);
       window.location.href = '/dependents';
     } catch (err) {
       setError(err.message);
@@ -57,9 +101,21 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 rounded-lg transition"
+            disabled={isWarmingUp}
+            className={`w-full font-semibold py-2 rounded-lg transition ${
+              isWarmingUp
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                : 'bg-orange-500 hover:bg-orange-600 text-white'
+            }`}
           >
-            Entrar
+            {isWarmingUp ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="inline-block w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                Aquecendo servidor...
+              </span>
+            ) : (
+              'Entrar'
+            )}
           </button>
         </form>
 

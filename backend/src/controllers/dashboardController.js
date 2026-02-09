@@ -17,7 +17,7 @@ const dashboardService = require('../services/dashboardService');
 
 async function today(req, res, next) {
     try {
-        const data = await dashboardService.getTodayOverview(req.user.id);
+        const data = await dashboardService.getTodayOverview(req.userId);
         res.json(data);
     } catch (err) {
         next(err);

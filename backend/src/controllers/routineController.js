@@ -59,7 +59,7 @@ async function create(req, res, next) {
         const routine = await routineService.createRoutine(
             req.body,
             Number(dependentId),
-            req.user.id
+            req.userId
         );
         res.status(201).json(routine);
     } catch (err) {
@@ -93,7 +93,7 @@ async function list(req, res, next) {
         const { dependentId } = req.params;
         const routines = await routineService.listRoutines(
             Number(dependentId),
-            req.user.id
+            req.userId
         );
         res.json(routines);
     } catch (err) {

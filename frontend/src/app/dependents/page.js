@@ -2,8 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import AuthGuard from '@/components/AuthGuard';
 
 export default function DependentsPage() {
+  return (
+    <AuthGuard>
+      <DependentContent />
+    </AuthGuard>
+  );
+}
+
+function DependentContent() {
   const [dependents, setDependents] = useState([]);
   const [name, setName] = useState('');
   const router = useRouter();
@@ -21,7 +30,8 @@ export default function DependentsPage() {
     );
 
     const json = await res.json();
-    setDependents(json);
+    const list = Array.isArray(json) ? json : json?.data ?? json?.dependents ?? [];
+    setDependents(list);
   }
 
   useEffect(() => {
@@ -95,7 +105,7 @@ export default function DependentsPage() {
           </p>
         )}
 
-        {dependents.map((dep) => (
+        {Array.isArray(dependents) ? dependents.map((dep) => (
           <div
             key={dep.id}
             className="bg-white rounded-2xl shadow p-4 flex items-center justify-between"
@@ -131,7 +141,7 @@ export default function DependentsPage() {
               </button>
             </div>
           </div>
-        ))}
+        )) : null}
       </div>
     </div>
   );
