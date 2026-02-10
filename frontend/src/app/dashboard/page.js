@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AuthGuard from '@/components/AuthGuard';
+import { apiFetch } from '@/services/api';
 
 export default function DashboardPage() {
   return (
@@ -16,19 +17,8 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
 
   async function load() {
-    const token = localStorage.getItem('token');
-
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/dashboard/today`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const json = await res.json();
-    setData(json);
+    const res = await apiFetch('/dashboard/today');
+    setData(res);
     setLoading(false);
   }
 
@@ -37,19 +27,12 @@ function DashboardContent() {
   }, []);
 
   async function markDone(scheduleId, notes) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
 
-    await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/schedules/${scheduleId}/done`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ notes }),
-      }
-    );
+    await apiFetch(`/schedules/${scheduleId}/done`, {
+      method: 'PATCH',
+      body: JSON.stringify({ notes }),
+    });
 
     load();
   }

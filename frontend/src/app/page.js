@@ -50,7 +50,7 @@ export default function LoginPage() {
     };
 
     const logout = () => {
-      localStorage.removeItem('token');
+      localStorage.clear();
     }
 
     wakeUpBackend();
@@ -67,8 +67,8 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      localStorage.setItem('token', data.accessToken);
-      window.location.href = '/dependents';
+      localStorage.setItem('accessToken', data.accessToken);
+      window.location.href = '/dashboard';
     } catch (err) {
       setError(err.message);
     }

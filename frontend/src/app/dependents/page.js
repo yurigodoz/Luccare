@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
+import { apiFetch } from '@/services/api';
 
 export default function DependentsPage() {
   return (
@@ -18,18 +19,10 @@ function DependentContent() {
   const router = useRouter();
 
   async function load() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
 
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/dependents`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const json = await apiFetch('/dependents');
 
-    const json = await res.json();
     const list = Array.isArray(json) ? json : json?.data ?? json?.dependents ?? [];
     setDependents(list);
   }
@@ -41,14 +34,10 @@ function DependentContent() {
   async function createDependent() {
     if (!name.trim()) return;
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
 
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dependents`, {
+    await apiFetch('/dependents', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify({ name }),
     });
 
@@ -57,19 +46,13 @@ function DependentContent() {
   }
 
   async function removeDependent(id) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
 
     if (!confirm('Deseja excluir este dependente?')) return;
 
-    await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/dependents/${id}`,
-      {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    await apiFetch(`/dependents/${id}`, {
+      method: 'DELETE',
+    });
 
     load();
   }

@@ -11,7 +11,7 @@ export default function AuthGuard({ children }) {
     useEffect(() => {
         const validateToken = async () => {
             try {
-                const token = localStorage.getItem('token');
+                const token = localStorage.getItem('accessToken');
                 
                 if (!token) {
                     router.push('/');
@@ -29,12 +29,12 @@ export default function AuthGuard({ children }) {
                 if (response.ok) {
                     setIsAuthorized(true);
                 } else {
-                    localStorage.removeItem('token');
+                    localStorage.clear();
                     router.push('/');
                 }
             } catch (error) {
                 console.error('Erro ao validar token:', error);
-                localStorage.removeItem('token');
+                localStorage.clear();
                 router.push('/');
             } finally {
                 setIsLoading(false);
