@@ -49,7 +49,12 @@ export default function LoginPage() {
       tryHealth();
     };
 
+    const logout = () => {
+      localStorage.removeItem('token');
+    }
+
     wakeUpBackend();
+    logout();
   }, []);
 
   async function handleLogin(e) {
