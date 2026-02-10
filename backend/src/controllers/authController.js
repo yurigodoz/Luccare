@@ -39,4 +39,8 @@ async function login(req, res, next) {
     }
 }
 
-module.exports = { login };
+async function validateToken(req, res) {
+    return res.json(req.user);
+}
+
+module.exports = { login, validateToken };
