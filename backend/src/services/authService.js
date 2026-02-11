@@ -30,4 +30,5 @@ async function login(email, password) {
         throw new BusinessError('Erro ao fazer login no serviço de autenticação!');
     }
 }
+
 module.exports = { login };
