@@ -5,7 +5,7 @@ const BusinessError = require('../errors/BusinessError');
 async function shareDependent(dependentId, ownerId, targetEmail, role) {
     const ownerLink = await dependentUserRepository.findLink(dependentId, ownerId);
 
-    if (!ownerLink || ownerLink.role !== 'PARENT') {
+    if (!ownerLink || ownerLink.role !== 'FAMILY') {
         throw new BusinessError('Você não tem permissão para compartilhar este dependente.');
     }
 

@@ -13,7 +13,7 @@ async function createDependent(data, userId) {
         notes: data.notes || ''
     });
 
-    await dependentUserRepository.addLink(dependent.id, userId, 'PARENT');
+    await dependentUserRepository.addLink(dependent.id, userId, 'FAMILY');
 
     return dependent;
 }
