@@ -9,8 +9,8 @@ function startRoutineMonitor() {
         const routines = await prisma.routine.findMany({
             where: {
                 active: true,
-                daysOfWeek: { has: day },
-                times: { has: time }
+                daysOfWeek: { some: { dayOfWeek: day } },
+                times: { some: { time: time } }
             }
         });
 

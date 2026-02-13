@@ -13,7 +13,7 @@ async function createRoutine(data, dependentId, userId) {
     const link = await dependentUserRepository.findLink(dependentId, userId);
 
     if (!link) throw new BusinessError('Você não tem acesso a este dependente');
-    if (!['PARENT', 'CAREGIVER'].includes(link.role))
+    if (!['FAMILY', 'CAREGIVER'].includes(link.role))
         throw new BusinessError('Sem permissão para criar rotinas');
 
     return routineRepository.create({

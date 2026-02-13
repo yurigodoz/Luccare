@@ -27,7 +27,7 @@ const shareService = require('../services/dependentShareService');
  *                 example: "mae@email.com"
  *               role:
  *                 type: string
- *                 example: "PARENT"
+ *                 example: "FAMILY"
  *     responses:
  *       200:
  *         description: Dependente compartilhado com sucesso

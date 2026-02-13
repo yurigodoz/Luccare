@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,8 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// USUÁRIOS E DEPENDENTES
+// ============================================
+
 model User {
-  id        Int      @id
+  id        Int      @id // ID vem da API externa de autenticação
   name      String
   email     String   @unique
   createdAt DateTime @default(now())
@@ -37,7 +35,7 @@ model Dependent {
 model DependentUser {
   userId      Int
   dependentId Int
-  role        String
+  role        DependentRole
 
   user      User      @relation(fields: [userId], references: [id])
   dependent Dependent @relation(fields: [dependentId], references: [id])
@@ -45,35 +43,67 @@ model DependentUser {
   @@id([userId, dependentId])
 }
 
+enum DependentRole {
+  FAMILY // Familiar
+  CAREGIVER // Cuidador
+  PROFESSIONAL // Profissional (terapeuta, médico, etc)
+}
+
+// ============================================
+// ROTINAS (Template/Definição)
+// ============================================
+
 model Routine {
-  id          Int      @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   dependentId Int
-  type        String
+  type        RoutineType
   title       String
   description String?
-  times       String[]
-  daysOfWeek  Int[]
-  active      Boolean  @default(true)
+  active      Boolean     @default(true)
   createdBy   Int
-  createdAt   DateTime @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  dependent        Dependent         @relation(fields: [dependentId], references: [id])
+  dependent        Dependent           @relation(fields: [dependentId], references: [id])
+  times            RoutineTime[]
+  daysOfWeek       RoutineDayOfWeek[]
   logs             RoutineLog[]
   routineSchedules RoutineSchedule[]
+
+  @@index([dependentId, active])
 }
 
-model RoutineLog {
-  id       Int      @id @default(autoincrement())
-  dateTime DateTime @default(now())
-  status   String
-  doneBy   Int
-  notes    String?
+model RoutineTime {
+  routineId Int
+  time      String // Formato: "HH:mm"
 
-  scheduleId Int?             @unique
-  schedule   RoutineSchedule? @relation(fields: [scheduleId], references: [id])
-  routine    Routine?         @relation(fields: [routineId], references: [id])
-  routineId  Int?
+  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+
+  @@id([routineId, time])
 }
+
+model RoutineDayOfWeek {
+  routineId Int
+  dayOfWeek Int // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+
+  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+
+  @@id([routineId, dayOfWeek])
+  @@index([dayOfWeek])
+}
+
+enum RoutineType {
+  MEDICATION
+  FEEDING
+  THERAPY
+  HYGIENE
+  EXERCISE
+  OTHER
+}
+
+// ============================================
+// AGENDA DIÁRIA (Instâncias das rotinas)
+// ============================================
 
 model RoutineSchedule {
   id Int @id @default(autoincrement())
@@ -81,10 +111,8 @@ model RoutineSchedule {
   routineId   Int
   dependentId Int
 
-  scheduledDate DateTime
+  scheduledDate DateTime @db.Date
   scheduledTime String
-
-  status ScheduleStatus @default(PENDING)
 
   routine   Routine   @relation(fields: [routineId], references: [id])
   dependent Dependent @relation(fields: [dependentId], references: [id])
@@ -95,9 +123,25 @@ model RoutineSchedule {
   @@unique([dependentId, scheduledDate, scheduledTime, routineId])
 }
 
-enum ScheduleStatus {
-  PENDING
+// ============================================
+// EXECUÇÃO (Logs de quando foi feito)
+// ============================================
+
+model RoutineLog {
+  id       Int       @id @default(autoincrement())
+  dateTime DateTime  @default(now())
+  status   LogStatus
+  doneBy   Int
+  notes    String?
+
+  scheduleId Int             @unique
+  schedule   RoutineSchedule @relation(fields: [scheduleId], references: [id])
+
+  routineId Int
+  routine   Routine @relation(fields: [routineId], references: [id])
+}
+
+enum LogStatus {
   DONE
   SKIPPED
-  CANCELED
 }
