@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/services/api';
 
 export default function AuthGuard({ children }) {
     const router = useRouter();
@@ -12,29 +13,16 @@ export default function AuthGuard({ children }) {
         const validateToken = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                
+
                 if (!token) {
                     router.push('/');
                     return;
                 }
 
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/validate-token`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (response.ok) {
-                    setIsAuthorized(true);
-                } else {
-                    localStorage.clear();
-                    router.push('/');
-                }
+                await apiFetch('/auth/validate-token');
+                setIsAuthorized(true);
             } catch (error) {
                 console.error('Erro ao validar token:', error);
-                localStorage.clear();
                 router.push('/');
             } finally {
                 setIsLoading(false);

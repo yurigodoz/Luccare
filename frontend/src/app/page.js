@@ -68,6 +68,7 @@ export default function LoginPage() {
       });
 
       localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
       window.location.href = '/dashboard';
     } catch (err) {
       setError(err.message);

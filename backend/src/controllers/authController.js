@@ -43,4 +43,40 @@ async function validateToken(req, res) {
     return res.json(req.user);
 }
 
-module.exports = { login, validateToken };
+
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Atualiza o token JWT de um usuário
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - refreshToken
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 example: "040b3d74f38ca46c9c6af15c78de2f106eba123c5c8eb5c09a6ef4c977ff565493edeb6310a62aa7"
+ *     responses:
+ *       200:
+ *         description: Token atualizado com sucesso
+ *       401:
+ *         description: Token inválido
+ */
+
+async function refreshToken(req, res, next) {
+    try {
+        const { refreshToken } = req.body;
+        const result = await authService.refreshToken(refreshToken);
+        res.json(result);
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = { login, validateToken, refreshToken };
