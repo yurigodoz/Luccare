@@ -74,8 +74,9 @@ function groupSchedulesByDependent(schedules) {
             title: schedule.routine.title,
             type: schedule.routine.type,
             time: schedule.scheduledTime,
-            done: schedule.logs.length > 0,
-            status: schedule.logs[0]?.status || null
+            done: schedule.log !== null,
+            status: schedule.log?.status || null,
+            notes: schedule.log?.notes || null
         });
     }
 

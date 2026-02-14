@@ -13,14 +13,10 @@ async function getTodaySchedules(dependentIds, scheduledDate) {
                     type: true
                 }
             },
-            logs: {
+            log: {
                 select: {
-                    id: true,
-                    status: true
-                },
-                take: 1,
-                orderBy: {
-                    dateTime: 'desc'
+                    status: true,
+                    notes: true
                 }
             },
             dependent: {

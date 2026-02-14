@@ -2,18 +2,21 @@ const routineLogService = require('../services/routineLogService');
 
 /**
  * @swagger
- * /routines/logs/{logId}:
+ * /schedules/{scheduleId}/log:
  *   put:
- *     summary: Atualiza observação de um log de rotina
+ *     summary: Cria ou atualiza o log de execução de um horário agendado
+ *     description: Marca um horário como concluído (DONE) ou pulado (SKIPPED), com notas opcionais
  *     tags: [RoutineLogs]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: logId
+ *         name: scheduleId
  *         required: true
  *         schema:
  *           type: integer
+ *         description: ID do schedule (evento do dia)
+ *         example: 1
  *     requestBody:
  *       required: true
  *       content:
@@ -21,35 +24,61 @@ const routineLogService = require('../services/routineLogService');
  *           schema:
  *             type: object
  *             required:
- *               - notes
+ *               - status
  *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [DONE, SKIPPED]
+ *                 example: DONE
  *               notes:
  *                 type: string
- *                 example: "Tomou com dificuldade"
+ *                 example: "Tomou após o café"
  *     responses:
  *       200:
- *         description: Observação atualizada com sucesso
+ *         description: Log criado/atualizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 scheduleId:
+ *                   type: integer
+ *                 status:
+ *                   type: string
+ *                   example: DONE
+ *                 notes:
+ *                   type: string
+ *                 dateTime:
+ *                   type: string
+ *                   format: date-time
+ *                 doneBy:
+ *                   type: integer
+ *       400:
+ *         description: Status inválido
+ *       403:
+ *         description: Usuário sem permissão
  *       404:
- *         description: Log não encontrado
+ *         description: Schedule não encontrado
+ *       401:
+ *         description: Não autenticado
  */
-
-async function updateNotes(req, res, next) {
+async function upsertLog(req, res, next) {
     try {
-        const { logId } = req.params;
-        const { notes } = req.body;
+        const scheduleId = Number(req.params.scheduleId);
+        const { status, notes } = req.body;
 
-        const updated = await routineLogService.updateLogNotes(
-            Number(logId),
+        const log = await routineLogService.upsertScheduleLog(
+            scheduleId,
             req.userId,
+            status,
             notes
         );
 
-        res.json(updated);
+        res.json(log);
     } catch (err) {
         next(err);
     }
 }
-
 
 /**
  * @swagger
@@ -71,7 +100,6 @@ async function updateNotes(req, res, next) {
  *       403:
  *         description: Usuário sem permissão
  */
-
 async function listByRoutine(req, res, next) {
     try {
         const { routineId } = req.params;
@@ -87,81 +115,7 @@ async function listByRoutine(req, res, next) {
     }
 }
 
-/**
- * @swagger
- * /schedules/{scheduleId}/done:
- *   patch:
- *     summary: Marca um horário específico da rotina como concluído
- *     description: Cria ou atualiza o log de execução de um RoutineSchedule
- *     tags: [RoutineLogs]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: scheduleId
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID do schedule (evento do dia)
- *         example: 1
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               notes:
- *                 type: string
- *                 example: "Tomou após o café"
- *     responses:
- *       200:
- *         description: Log criado/atualizado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                 scheduleId:
- *                   type: integer
- *                 status:
- *                   type: string
- *                   example: DONE
- *                 notes:
- *                   type: string
- *                 doneAt:
- *                   type: string
- *                   format: date-time
- *       403:
- *         description: Usuário sem permissão
- *       404:
- *         description: Schedule não encontrado
- *       401:
- *         description: Não autenticado
- */
-
-async function markDone(req, res, next) {
-    try {
-        const scheduleId = Number(req.params.scheduleId);
-        const { notes } = req.body;
-
-        const log = await routineLogService.markScheduleDone(
-            scheduleId,
-            req.userId,
-            notes
-        );
-
-        res.json(log);
-
-    } catch (err) {
-        next(err);
-    }
-}
-
 module.exports = {
-    updateNotes,
-    listByRoutine,
-    markDone
+    upsertLog,
+    listByRoutine
 };

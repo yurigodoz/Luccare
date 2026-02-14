@@ -26,12 +26,10 @@ function DashboardContent() {
     load();
   }, []);
 
-  async function markDone(scheduleId, notes) {
-    const token = localStorage.getItem('accessToken');
-
-    await apiFetch(`/schedules/${scheduleId}/done`, {
-      method: 'PATCH',
-      body: JSON.stringify({ notes }),
+  async function updateLog(scheduleId, status, notes) {
+    await apiFetch(`/schedules/${scheduleId}/log`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, notes }),
     });
 
     load();
@@ -56,7 +54,7 @@ function DashboardContent() {
           <DependentCard
             key={dep.dependentId}
             dependent={dep}
-            onDone={markDone}
+            onUpdateLog={updateLog}
           />
         ))}
       </div>
@@ -64,7 +62,7 @@ function DashboardContent() {
   );
 }
 
-function DependentCard({ dependent, onDone }) {
+function DependentCard({ dependent, onUpdateLog }) {
   return (
     <div className="bg-white rounded-2xl shadow-md p-5 border border-gray-100">
       <h2 className="font-bold text-lg text-gray-900 mb-4">
@@ -76,7 +74,7 @@ function DependentCard({ dependent, onDone }) {
           <ScheduleItem
             key={item.scheduleId}
             item={item}
-            onDone={onDone}
+            onUpdateLog={onUpdateLog}
           />
         ))}
       </div>
@@ -84,50 +82,68 @@ function DependentCard({ dependent, onDone }) {
   );
 }
 
-function ScheduleItem({ item, onDone }) {
-  const [notes, setNotes] = useState('');
+const STATUS_CONFIG = {
+  DONE: {
+    bg: 'bg-green-50 border-green-200',
+    label: '✓ Concluído',
+    labelClass: 'text-green-700',
+  },
+  SKIPPED: {
+    bg: 'bg-gray-100 border-gray-300',
+    label: '⏭ Pulado',
+    labelClass: 'text-gray-500',
+  },
+};
+
+function ScheduleItem({ item, onUpdateLog }) {
+  const [notes, setNotes] = useState(item.notes || '');
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
 
-  const done = item.done;
-
-  async function handleDone() {
-    setSaving(true);
-    const normalizedNotes = notes.trim() === '' ? null : notes;
-    await onDone(item.scheduleId, normalizedNotes);
-    setSaving(false);
+  function startEditing() {
+    setNotes(item.notes || '');
+    setEditing(true);
   }
 
-  return (
-    <div
-      className={`
-        rounded-xl border p-4 transition
-        ${done
-          ? 'bg-green-50 border-green-200'
-          : 'bg-orange-50 border-orange-200'}
-      `}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <div>
-          <p className="font-semibold text-gray-900">{item.title}</p>
-          <p className="text-sm text-gray-700">{item.time}</p>
+  const { status } = item;
+  const config = STATUS_CONFIG[status];
+
+  async function handleUpdate(newStatus) {
+    setSaving(true);
+    const normalizedNotes = notes.trim() === '' ? null : notes;
+    await onUpdateLog(item.scheduleId, newStatus, normalizedNotes);
+    setSaving(false);
+    setEditing(false);
+  }
+
+  // Pendente
+  if (!status) {
+    return (
+      <div className="rounded-xl border p-4 transition bg-orange-50 border-orange-200">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <p className="font-semibold text-gray-900">{item.title}</p>
+            <p className="text-sm text-gray-700">{item.time}</p>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleUpdate('DONE')}
+              disabled={saving}
+              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm font-medium disabled:opacity-50"
+            >
+              {saving ? '...' : '✓ Feito'}
+            </button>
+            <button
+              onClick={() => handleUpdate('SKIPPED')}
+              disabled={saving}
+              className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium disabled:opacity-50"
+            >
+              {saving ? '...' : '⏭ Pular'}
+            </button>
+          </div>
         </div>
 
-        {done ? (
-          <span className="text-green-700 font-semibold text-sm">
-            ✓ Concluído
-          </span>
-        ) : (
-          <button
-            onClick={handleDone}
-            disabled={saving}
-            className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm font-medium disabled:opacity-50"
-          >
-            {saving ? '...' : '✓ Feito'}
-          </button>
-        )}
-      </div>
-
-      {!done && (
         <input
           placeholder="Observação (opcional)"
           value={notes}
@@ -140,7 +156,82 @@ function ScheduleItem({ item, onDone }) {
             focus:outline-none focus:ring-2 focus:ring-blue-400
           "
         />
-      )}
+      </div>
+    );
+  }
+
+  // DONE ou SKIPPED - com opção de editar
+  if (editing) {
+    return (
+      <div className={`rounded-xl border p-4 transition ${config.bg}`}>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <p className="font-semibold text-gray-900">{item.title}</p>
+            <p className="text-sm text-gray-700">{item.time}</p>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleUpdate('DONE')}
+              disabled={saving}
+              className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm font-medium disabled:opacity-50"
+            >
+              {saving ? '...' : '✓ Feito'}
+            </button>
+            <button
+              onClick={() => handleUpdate('SKIPPED')}
+              disabled={saving}
+              className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-lg text-sm font-medium disabled:opacity-50"
+            >
+              {saving ? '...' : '⏭ Pular'}
+            </button>
+            <button
+              onClick={() => setEditing(false)}
+              className="text-gray-500 hover:text-gray-700 px-2 py-1 text-sm"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+
+        <input
+          placeholder="Observação (opcional)"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className="
+            w-full mt-2
+            rounded-lg border border-gray-300
+            px-3 py-2 text-sm
+            text-gray-900
+            focus:outline-none focus:ring-2 focus:ring-blue-400
+          "
+        />
+      </div>
+    );
+  }
+
+  // DONE ou SKIPPED - visualização
+  return (
+    <div className={`rounded-xl border p-4 transition ${config.bg}`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-semibold text-gray-900">{item.title}</p>
+          <p className="text-sm text-gray-700">{item.time}</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className={`font-semibold text-sm ${config.labelClass}`}>
+            {config.label}
+          </span>
+          <button
+            onClick={startEditing}
+            className="text-gray-400 hover:text-gray-600 text-sm ml-1"
+            title="Editar"
+          >
+            ✏️
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

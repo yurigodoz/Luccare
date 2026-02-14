@@ -1,7 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 import "./globals.css";
-import Navbar from '@/components/Navbar';
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +15,16 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Luccare",
   description: "Gerenciador de rotinas diárias",
+  manifest: "/manifest.json",
+  themeColor: "#2563eb",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Luccare",
+  },
+  icons: {
+    apple: "/icons/icon-192.png",
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -24,6 +33,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-blue-50`}
       >
+        <ServiceWorkerRegister />
         <div className="min-h-screen flex flex-col">
           <main className="flex-1">
             {children}

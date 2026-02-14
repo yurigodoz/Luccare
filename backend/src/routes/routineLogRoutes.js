@@ -4,8 +4,7 @@ const routineLogController = require('../controllers/routineLogController');
 
 const router = express.Router();
 
-router.put('/routines/logs/:logId', authMiddleware, routineLogController.updateNotes);
+router.put('/schedules/:scheduleId/log', authMiddleware, routineLogController.upsertLog);
 router.get('/routines/:routineId/logs', authMiddleware, routineLogController.listByRoutine);
-router.patch('/schedules/:scheduleId/done', authMiddleware, routineLogController.markDone);
 
 module.exports = router;
