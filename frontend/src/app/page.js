@@ -13,6 +13,14 @@ export default function LoginPage() {
   const [isWarmingUp, setIsWarmingUp] = useState(true);
 
   useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    if (accessToken && refreshToken) {
+      window.location.href = '/dashboard';
+      return;
+    }
+
     const wakeUpBackend = async () => {
       let attempts = 0;
       const maxAttempts = 30;
@@ -50,12 +58,7 @@ export default function LoginPage() {
       tryHealth();
     };
 
-    const logout = () => {
-      localStorage.clear();
-    }
-
     wakeUpBackend();
-    logout();
   }, []);
 
   function toggleMode() {
