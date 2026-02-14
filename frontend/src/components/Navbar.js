@@ -21,7 +21,7 @@ export default function Navbar() {
     <header className="bg-blue-600 text-white shadow-md">
       <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
 
-        <Link href="/dashboard" className="font-bold text-lg">
+        <Link href="/" className="font-bold text-lg">
           💙 Luccare
         </Link>
 
