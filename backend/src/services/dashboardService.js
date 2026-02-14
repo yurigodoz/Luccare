@@ -1,24 +1,32 @@
 const prisma = require('../database/prisma');
 const dependentUserRepository = require('../repositories/dependentUserRepository');
 const routineScheduleRepository = require('../repositories/routineScheduleRepository');
+const BusinessError = require('../errors/BusinessError');
 
 async function getTodayOverview(userId) {
-    const today = getStartOfDay(new Date());
-    const currentDayOfWeek = today.getDay();
+    try {
+        const today = getStartOfDay(new Date());
+        const currentDayOfWeek = today.getDay();
 
-    const dependentRoutines = await dependentUserRepository.getDependentRoutinesForToday(userId, currentDayOfWeek);
+        const dependentRoutines = await dependentUserRepository.getDependentRoutinesForToday(userId, currentDayOfWeek);
 
-    if (dependentRoutines.length === 0) {
-        return [];
+        if (dependentRoutines.length === 0) {
+            return [];
+        }
+
+        const routines = dependentRoutines.flatMap(dep => dep.routines);
+        await ensureSchedulesExist(routines, today);
+
+        const dependentIds = dependentRoutines.map(dep => dep.dependentId);
+        const schedules = await routineScheduleRepository.getTodaySchedules(dependentIds, today);
+
+        return groupSchedulesByDependent(schedules);
+    } catch (err) {
+        if (err instanceof BusinessError) throw err;
+
+        console.log('Erro no getTodayOverview:', err);
+        throw new BusinessError('Erro ao buscar resumo do dia.');
     }
-
-    const routines = dependentRoutines.flatMap(dep => dep.routines);
-    await ensureSchedulesExist(routines, today);
-
-    const dependentIds = dependentRoutines.map(dep => dep.dependentId);
-    const schedules = await routineScheduleRepository.getTodaySchedules(dependentIds, today);
-
-    return groupSchedulesByDependent(schedules);
 }
 
 function getStartOfDay(date) {
