@@ -27,6 +27,7 @@ async function login(email, password) {
         return authResponse;
     } catch (err) {
         if (err instanceof BusinessError) throw err;
+        
         console.log('Erro no login Auth Service:', err);
         throw new BusinessError('Erro ao fazer login no serviço de autenticação!');
     }
@@ -54,6 +55,7 @@ async function refreshToken(refreshToken) {
         return await response.json();
     } catch (err) {
         if (err instanceof BusinessError) throw err;
+
         console.log('Erro no refreshToken Auth Service:', err);
         throw new BusinessError('Erro ao atualizar token no serviço de autenticação!');
     }
