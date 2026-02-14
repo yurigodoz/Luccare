@@ -1,20 +1,22 @@
 const prisma = require('../database/prisma');
 const dependentUserRepository = require('../repositories/dependentUserRepository');
+const routineScheduleRepository = require('../repositories/routineScheduleRepository');
 
 async function getTodayOverview(userId) {
     const today = getStartOfDay(new Date());
     const currentDayOfWeek = today.getDay();
 
-    const dependentIds = await getDependentIds(userId);
+    const dependentRoutines = await dependentUserRepository.getDependentRoutinesForToday(userId, currentDayOfWeek);
 
-    if (dependentIds.length === 0) {
+    if (dependentRoutines.length === 0) {
         return [];
     }
 
-    const routines = await getActiveRoutinesForToday(dependentIds, currentDayOfWeek);
+    const routines = dependentRoutines.flatMap(dep => dep.routines);
     await ensureSchedulesExist(routines, today);
 
-    const schedules = await getTodaySchedules(dependentIds, today);
+    const dependentIds = dependentRoutines.map(dep => dep.dependentId);
+    const schedules = await routineScheduleRepository.getTodaySchedules(dependentIds, today);
 
     return groupSchedulesByDependent(schedules);
 }
@@ -23,37 +25,6 @@ function getStartOfDay(date) {
     const day = new Date(date);
     day.setHours(0, 0, 0, 0);
     return day;
-}
-
-async function getDependentIds(userId) {
-    const links = await dependentUserRepository.findByUser(userId);
-    return links.map(link => link.dependentId);
-}
-
-async function getActiveRoutinesForToday(dependentIds, dayOfWeek) {
-    return prisma.routine.findMany({
-        where: {
-            dependentId: { in: dependentIds },
-            active: true,
-            daysOfWeek: {
-                some: {
-                    dayOfWeek: dayOfWeek
-                }
-            }
-        },
-        select: {
-            id: true,
-            dependentId: true,
-            times: {
-                select: {
-                    time: true
-                },
-                orderBy: {
-                    time: 'asc'
-                }
-            }
-        }
-    });
 }
 
 async function ensureSchedulesExist(routines, scheduledDate) {
@@ -73,41 +44,6 @@ async function ensureSchedulesExist(routines, scheduledDate) {
     await prisma.routineSchedule.createMany({
         data: schedulesToCreate,
         skipDuplicates: true,
-    });
-}
-
-async function getTodaySchedules(dependentIds, scheduledDate) {
-    return prisma.routineSchedule.findMany({
-        where: {
-            dependentId: { in: dependentIds },
-            scheduledDate,
-        },
-        include: {
-            routine: {
-                select: {
-                    title: true,
-                    type: true
-                }
-            },
-            logs: {
-                select: {
-                    id: true,
-                    status: true
-                },
-                take: 1,
-                orderBy: {
-                    dateTime: 'desc'
-                }
-            },
-            dependent: {
-                select: {
-                    name: true
-                }
-            }
-        },
-        orderBy: {
-            scheduledTime: 'asc'
-        }
     });
 }
 

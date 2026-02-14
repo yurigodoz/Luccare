@@ -89,7 +89,7 @@ model RoutineDayOfWeek {
   routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
 
   @@id([routineId, dayOfWeek])
-  @@index([dayOfWeek])
+  @@index([dayOfWeek, routineId])
 }
 
 enum RoutineType {

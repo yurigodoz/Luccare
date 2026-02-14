@@ -33,9 +33,50 @@ async function findLink(dependentId, userId) {
     });
 }
 
+async function getDependentRoutinesForToday(userId, dayOfWeek) {
+    return prisma.dependentUser.findMany({
+        where: { userId },
+        select: {
+            dependentId: true,
+            dependent: {
+                select: {
+                    routines: {
+                        where: {
+                            active: true,
+                            daysOfWeek: {
+                                some: {
+                                    dayOfWeek: dayOfWeek
+                                }
+                            }
+                        },
+                        select: {
+                            id: true,
+                            dependentId: true,
+                            times: {
+                                select: {
+                                    time: true
+                                },
+                                orderBy: {
+                                    time: 'asc'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }).then(deps =>
+        deps.map(dep => ({
+            dependentId: dep.dependentId,
+            routines: dep.dependent.routines
+        }))
+    );
+}
+
 module.exports = {
     addLink,
     findByUser,
     findByDependent,
-    findLink
+    findLink,
+    getDependentRoutinesForToday
 };
