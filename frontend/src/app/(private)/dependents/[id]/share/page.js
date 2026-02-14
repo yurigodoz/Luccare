@@ -10,7 +10,7 @@ export default function ShareDependentPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('PARENT');
+  const [role, setRole] = useState('CAREGIVER');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -62,9 +62,9 @@ export default function ShareDependentPage() {
             onChange={(e) => setRole(e.target.value)}
             className="w-full border rounded-lg px-3 py-2 text-gray-900"
           >
-            <option value="PARENT">Responsável</option>
+            <option value="FAMILY">Familiar</option>
             <option value="CAREGIVER">Cuidador</option>
-            <option value="VIEWER">Somente visualização</option>
+            <option value="PROFESSIONAL">Profissional</option>
           </select>
 
           {/* Botão */}
