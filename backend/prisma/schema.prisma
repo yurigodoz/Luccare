@@ -67,7 +67,6 @@ model Routine {
   dependent        Dependent           @relation(fields: [dependentId], references: [id])
   times            RoutineTime[]
   daysOfWeek       RoutineDayOfWeek[]
-  logs             RoutineLog[]
   routineSchedules RoutineSchedule[]
 
   @@index([dependentId, active])
@@ -118,7 +117,7 @@ model RoutineSchedule {
   dependent Dependent @relation(fields: [dependentId], references: [id])
 
   createdAt DateTime     @default(now())
-  logs      RoutineLog[]
+  log RoutineLog?
 
   @@unique([dependentId, scheduledDate, scheduledTime, routineId])
 }
@@ -128,17 +127,13 @@ model RoutineSchedule {
 // ============================================
 
 model RoutineLog {
-  id       Int       @id @default(autoincrement())
-  dateTime DateTime  @default(now())
-  status   LogStatus
-  doneBy   Int
-  notes    String?
+  scheduleId Int             @id
+  dateTime   DateTime        @default(now())
+  status     LogStatus
+  doneBy     Int
+  notes      String?
 
-  scheduleId Int             @unique
-  schedule   RoutineSchedule @relation(fields: [scheduleId], references: [id])
-
-  routineId Int
-  routine   Routine @relation(fields: [routineId], references: [id])
+  schedule RoutineSchedule @relation(fields: [scheduleId], references: [id])
 }
 
 enum LogStatus {

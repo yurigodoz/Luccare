@@ -1,38 +1,18 @@
 const prisma = require('../database/prisma');
 
-async function updateNotes(logId, notes) {
-    return prisma.routineLog.update({
-        where: { id: logId },
-        data: { notes },
+async function upsertLog(scheduleId, userId, status, notes) {
+    return prisma.routineLog.upsert({
+        where: { scheduleId },
+        create: { scheduleId, status, notes, doneBy: userId },
+        update: { status, notes, doneBy: userId, dateTime: new Date() }
     });
 }
 
 async function findByRoutine(routineId) {
     return prisma.routineLog.findMany({
-        where: { routineId },
+        where: { schedule: { routineId } },
         orderBy: { dateTime: 'desc' }
     });
 }
 
-async function findById(id) {
-    return prisma.routineLog.findUnique({
-        where: { id },
-        include: {
-            routine: {
-                include: {
-                    dependent: {
-                        include: {
-                            users: true,
-                        },
-                    },
-                },
-            },
-        },
-    });
-}
-
-module.exports = {
-    updateNotes,
-    findByRoutine,
-    findById
-};
+module.exports = { upsertLog, findByRoutine };
