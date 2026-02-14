@@ -11,20 +11,20 @@ function authMiddlewareLocal(req, res, next) {
     const parts = authHeader.split(' ');
 
     if (parts.length !== 2) {
-        return res.status(401).json({ message: 'Token mal formatado!' });
+        return res.status(400).json({ message: 'Token mal formatado!' });
     }
 
     const [scheme, token] = parts;
 
     if (scheme !== 'Bearer') {
-        return res.status(401).json({ message: 'Token mal formatado (scheme)!' });
+        return res.status(400).json({ message: 'Token mal formatado (scheme)!' });
     }
-    
+
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
+
         if (decoded.app !== process.env.AUTH_API_APP_SLUG) {
-            return res.status(401).json({ message: 'Token inválido para este app!' });
+            return res.status(403).json({ message: 'Token inválido para este app!' });
         }
 
         req.userId = decoded.userId;
@@ -45,13 +45,13 @@ async function authMiddlewareRemote(req, res, next) {
     const parts = authHeader.split(' ');
 
     if (parts.length !== 2) {
-        return res.status(401).json({ message: 'Token mal formatado!' });
+        return res.status(400).json({ message: 'Token mal formatado!' });
     }
 
     const [scheme] = parts;
 
     if (scheme !== 'Bearer') {
-        return res.status(401).json({ message: 'Token mal formatado (scheme)!' });
+        return res.status(400).json({ message: 'Token mal formatado (scheme)!' });
     }
 
     try {
@@ -70,7 +70,7 @@ async function authMiddlewareRemote(req, res, next) {
         const data = await response.json();
 
         if (data.app !== process.env.AUTH_API_APP_SLUG) {
-            return res.status(401).json({ message: 'Token inválido para este app!' });
+            return res.status(403).json({ message: 'Token inválido para este app!' });
         }
 
         req.userId = data.userId;
@@ -79,7 +79,7 @@ async function authMiddlewareRemote(req, res, next) {
 
     } catch (err) {
         console.log('Erro validando token no Auth Service:', err);
-        return res.status(401).json({ message: 'Erro ao validar token!' });
+        return res.status(502).json({ message: 'Erro ao validar token!' });
     }
 }
 
