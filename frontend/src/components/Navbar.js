@@ -25,7 +25,7 @@ export default function Navbar() {
           💙 Luccare
         </Link>
 
-        <nav className="flex gap-2 text-sm font-semibold">
+        <nav className="flex gap-2 text-sm font-semibold items-center">
           <Link href="/dashboard" className={navClass('/dashboard')}>
             🏠 Dashboard
           </Link>
@@ -33,6 +33,16 @@ export default function Navbar() {
           <Link href="/dependents" className={navClass('/dependents')}>
             👨‍👩‍👧 Dependentes
           </Link>
+
+          <button
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = '/';
+            }}
+            className="ml-4 px-3 py-1 rounded-lg text-white hover:bg-red-500 transition"
+          >
+            🚪 Sair
+          </button>
         </nav>
       </div>
     </header>
