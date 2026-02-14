@@ -4,17 +4,19 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/services/api';
 
 export default function LoginPage() {
+  const [isRegister, setIsRegister] = useState(false);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isWarmingUp, setIsWarmingUp] = useState(true);
 
-  // Wake up backend na inicialização da página de login
   useEffect(() => {
     const wakeUpBackend = async () => {
       let attempts = 0;
       const maxAttempts = 30;
-      const delayBetweenAttempts = 1000; // 1 segundo
+      const delayBetweenAttempts = 1000;
 
       const tryHealth = async () => {
         while (attempts < maxAttempts) {
@@ -41,8 +43,7 @@ export default function LoginPage() {
           }
         }
 
-        // Se chegou aqui, esgotou as 15 tentativas
-        console.log('Esgotadas as 15 tentativas. Liberando botão mesmo assim.');
+        console.log('Esgotadas as tentativas. Liberando botão mesmo assim.');
         setIsWarmingUp(false);
       };
 
@@ -56,6 +57,12 @@ export default function LoginPage() {
     wakeUpBackend();
     logout();
   }, []);
+
+  function toggleMode() {
+    setIsRegister(!isRegister);
+    setError('');
+    setSuccess('');
+  }
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -75,6 +82,26 @@ export default function LoginPage() {
     }
   }
 
+  async function handleRegister(e) {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    try {
+      await apiFetch('/users', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      setSuccess('Conta criada com sucesso! Faça login para continuar.');
+      setName('');
+      setPassword('');
+      setIsRegister(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
@@ -85,7 +112,18 @@ export default function LoginPage() {
           Cuidado e rotina com carinho
         </p>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={isRegister ? handleRegister : handleLogin} className="space-y-4">
+          {isRegister && (
+            <input
+              type="text"
+              placeholder="Nome"
+              className="w-full border rounded-lg px-4 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
+            />
+          )}
+
           <input
             type="email"
             placeholder="E-mail"
@@ -104,7 +142,6 @@ export default function LoginPage() {
             required
           />
 
-
           <button
             type="submit"
             disabled={isWarmingUp}
@@ -120,7 +157,7 @@ export default function LoginPage() {
                 Aquecendo servidor...
               </span>
             ) : (
-              'Entrar'
+              isRegister ? 'Cadastrar' : 'Entrar'
             )}
           </button>
         </form>
@@ -128,6 +165,28 @@ export default function LoginPage() {
         {error && (
           <p className="text-red-500 text-sm text-center mt-4">{error}</p>
         )}
+
+        {success && (
+          <p className="text-green-600 text-sm text-center mt-4">{success}</p>
+        )}
+
+        <p className="text-center text-sm text-gray-500 mt-4">
+          {isRegister ? (
+            <>
+              Já tem conta?{' '}
+              <button onClick={toggleMode} className="text-blue-600 hover:underline font-medium">
+                Entrar
+              </button>
+            </>
+          ) : (
+            <>
+              Não tem conta?{' '}
+              <button onClick={toggleMode} className="text-blue-600 hover:underline font-medium">
+                Cadastre-se
+              </button>
+            </>
+          )}
+        </p>
       </div>
     </div>
   );
