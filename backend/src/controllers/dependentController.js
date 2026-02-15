@@ -67,7 +67,73 @@ async function list(req, res, next) {
     }
 }
 
+/**
+ * @swagger
+ * /dependents/{id}:
+ *   get:
+ *     summary: Obtém um dependente por ID
+ *     tags: [Dependents]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Dependente encontrado
+ *       401:
+ *         description: Não autorizado
+ *       404:
+ *         description: Dependente não encontrado
+ */
+
+async function findById(req, res, next) {
+    try {
+        const dependent = await dependentService.getDependentById(Number(req.params.id), req.userId);
+        res.json(dependent);
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * @swagger
+ * /dependents/{id}:
+ *   delete:
+ *     summary: Exclui um dependente
+ *     tags: [Dependents]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Dependente excluído com sucesso
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Sem permissão para excluir
+ */
+
+async function remove(req, res, next) {
+    try {
+        await dependentService.deleteDependent(Number(req.params.id), req.userId);
+        res.status(204).end();
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     create,
-    list
+    list,
+    findById,
+    remove
 };

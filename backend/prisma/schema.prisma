@@ -140,3 +140,20 @@ enum LogStatus {
   DONE
   SKIPPED
 }
+
+// ============================================
+// AUDITORIA
+// ============================================
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  action    String   // Ex: "DELETE_DEPENDENT", "DELETE_ROUTINE"
+  entity    String   // Ex: "Dependent", "Routine"
+  entityId  Int
+  details   Json?    // Snapshot dos dados antes da exclusão
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId])
+}
