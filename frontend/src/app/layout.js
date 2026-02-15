@@ -16,7 +16,6 @@ export const metadata = {
   title: "Luccare",
   description: "Gerenciador de rotinas diárias",
   manifest: "/manifest.json",
-  themeColor: "#2563eb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -25,6 +24,10 @@ export const metadata = {
   icons: {
     apple: "/icons/icon-192.png",
   },
+};
+
+export const viewport = {
+  themeColor: "#2563eb",
 };
 
 export default function RootLayout({ children }) {
