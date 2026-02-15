@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { apiFetch } from '@/services/api';
@@ -9,10 +9,17 @@ export default function ShareDependentPage() {
   const { id } = useParams();
   const router = useRouter();
 
+  const [dependentName, setDependentName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('CAREGIVER');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    apiFetch(`/dependents/${id}`).then((dep) => {
+      if (dep?.name) setDependentName(dep.name);
+    });
+  }, [id]);
 
   async function handleShare() {
     if (!email.trim()) return;
@@ -43,7 +50,7 @@ export default function ShareDependentPage() {
     <AuthGuard>
       <div className="min-h-screen bg-blue-50 p-6">
         <h1 className="text-2xl font-bold text-blue-900 mb-6">
-          Compartilhar dependente
+          Compartilhar {dependentName || 'dependente'}
         </h1>
 
         <div className="bg-white rounded-2xl shadow p-6 max-w-md space-y-4">

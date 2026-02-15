@@ -55,8 +55,28 @@ async function findById(id) {
     return flattenRoutine(routine);
 }
 
+async function deleteById(id) {
+    return prisma.$transaction(async (tx) => {
+        // Deletar logs dos schedules desta rotina
+        await tx.routineLog.deleteMany({
+            where: { schedule: { routineId: id } }
+        });
+
+        // Deletar schedules
+        await tx.routineSchedule.deleteMany({
+            where: { routineId: id }
+        });
+
+        // Deletar rotina (times e daysOfWeek têm onDelete: Cascade)
+        return tx.routine.delete({
+            where: { id }
+        });
+    });
+}
+
 module.exports = {
     create,
     findByDependent,
-    findById
+    findById,
+    deleteById
 };

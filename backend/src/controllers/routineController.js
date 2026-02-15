@@ -101,7 +101,40 @@ async function list(req, res, next) {
     }
 }
 
+/**
+ * @swagger
+ * /routines/{id}:
+ *   delete:
+ *     summary: Exclui uma rotina
+ *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       204:
+ *         description: Rotina excluída com sucesso
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Sem permissão para excluir
+ */
+
+async function remove(req, res, next) {
+    try {
+        await routineService.deleteRoutine(Number(req.params.id), req.userId);
+        res.status(204).end();
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     create,
-    list
+    list,
+    remove
 };
