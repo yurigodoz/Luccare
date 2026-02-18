@@ -15,4 +15,10 @@ async function findByRoutine(routineId) {
     });
 }
 
-module.exports = { upsertLog, findByRoutine };
+async function deleteLog(scheduleId) {
+    return prisma.routineLog.delete({
+        where: { scheduleId }
+    });
+}
+
+module.exports = { upsertLog, findByRoutine, deleteLog };

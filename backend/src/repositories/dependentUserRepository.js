@@ -18,7 +18,23 @@ async function findByUser(userId) {
 
 async function findByDependent(dependentId) {
     return prisma.dependentUser.findMany({
-        where: { dependentId }
+        where: { dependentId },
+        include: {
+            user: {
+                select: { id: true, name: true, email: true }
+            }
+        }
+    });
+}
+
+async function removeLink(dependentId, userId) {
+    return prisma.dependentUser.delete({
+        where: {
+            userId_dependentId: {
+                userId: Number(userId),
+                dependentId: Number(dependentId)
+            }
+        }
     });
 }
 
@@ -35,7 +51,10 @@ async function findLink(dependentId, userId) {
 
 async function getDependentRoutinesForToday(userId, dayOfWeek) {
     return prisma.dependentUser.findMany({
-        where: { userId },
+        where: {
+            userId,
+            dependent: { active: true }
+        },
         select: {
             dependentId: true,
             dependent: {
@@ -78,5 +97,6 @@ module.exports = {
     findByUser,
     findByDependent,
     findLink,
+    removeLink,
     getDependentRoutinesForToday
 };

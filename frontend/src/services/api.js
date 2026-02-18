@@ -30,6 +30,7 @@ export async function apiFetch(path, options = {}) {
 
     const headers = {
         'Content-Type': 'application/json',
+        'X-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone,
         ...(options.headers || {}),
     };
 

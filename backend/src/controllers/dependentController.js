@@ -102,6 +102,61 @@ async function findById(req, res, next) {
 /**
  * @swagger
  * /dependents/{id}:
+ *   put:
+ *     summary: Atualiza um dependente
+ *     tags: [Dependents]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Lucca"
+ *               birthDate:
+ *                 type: string
+ *                 format: date
+ *                 example: "2021-02-13"
+ *               notes:
+ *                 type: string
+ *                 example: "NBIA5"
+ *     responses:
+ *       200:
+ *         description: Dependente atualizado com sucesso
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Sem permissão para editar
+ */
+
+async function update(req, res, next) {
+    try {
+        const dependent = await dependentService.updateDependent(
+            Number(req.params.id),
+            req.body,
+            req.userId
+        );
+        res.json(dependent);
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * @swagger
+ * /dependents/{id}:
  *   delete:
  *     summary: Exclui um dependente
  *     tags: [Dependents]
@@ -135,5 +190,6 @@ module.exports = {
     create,
     list,
     findById,
+    update,
     remove
 };

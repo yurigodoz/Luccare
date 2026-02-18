@@ -21,23 +21,13 @@ function DependentContent() {
   async function load() {
     const json = await apiFetch('/dependents');
     const list = Array.isArray(json) ? json : json?.data ?? json?.dependents ?? [];
+    list.sort((a, b) => a.name.localeCompare(b.name));
     setDependents(list);
   }
 
   useEffect(() => {
     load();
   }, []);
-
-  async function removeDependent(id) {
-    if (!confirm('Deseja excluir este dependente?')) return;
-
-    await apiFetch(`/dependents/${id}`, {
-      method: 'DELETE',
-    });
-
-    setExpandedId(null);
-    load();
-  }
 
   function toggleExpand(id) {
     setExpandedId(expandedId === id ? null : id);
@@ -99,10 +89,10 @@ function DependentContent() {
                 </button>
 
                 <button
-                  onClick={() => removeDependent(dep.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
+                  onClick={() => router.push(`/dependents/${dep.id}/edit`)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm"
                 >
-                  Excluir
+                  Editar
                 </button>
               </div>
             )}

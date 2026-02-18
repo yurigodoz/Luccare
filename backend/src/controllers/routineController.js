@@ -104,6 +104,105 @@ async function list(req, res, next) {
 /**
  * @swagger
  * /routines/{id}:
+ *   get:
+ *     summary: Retorna uma rotina pelo ID
+ *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Rotina encontrada
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Sem permissão
+ */
+
+async function getById(req, res, next) {
+    try {
+        const routine = await routineService.getRoutine(Number(req.params.id), req.userId);
+        res.json(routine);
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * @swagger
+ * /routines/{id}:
+ *   put:
+ *     summary: Atualiza uma rotina
+ *     tags: [Routines]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - type
+ *               - title
+ *               - times
+ *               - daysOfWeek
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 example: MEDICATION
+ *               title:
+ *                 type: string
+ *                 example: Domperidona 1mg/ml - 3ml
+ *               description:
+ *                 type: string
+ *                 example: 5ml
+ *               times:
+ *                 type: array
+ *                 example: ["07:00", "13:00", "18:00"]
+ *                 items:
+ *                   type: string
+ *               daysOfWeek:
+ *                 type: array
+ *                 example: [0, 1, 2, 3, 4, 5, 6]
+ *                 items:
+ *                   type: integer
+ *     responses:
+ *       200:
+ *         description: Rotina atualizada com sucesso
+ *       401:
+ *         description: Não autorizado
+ *       403:
+ *         description: Sem permissão para editar
+ */
+
+async function update(req, res, next) {
+    try {
+        const routine = await routineService.updateRoutine(
+            Number(req.params.id),
+            req.body,
+            req.userId
+        );
+        res.json(routine);
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
+ * @swagger
+ * /routines/{id}:
  *   delete:
  *     summary: Exclui uma rotina
  *     tags: [Routines]
@@ -136,5 +235,7 @@ async function remove(req, res, next) {
 module.exports = {
     create,
     list,
+    getById,
+    update,
     remove
 };

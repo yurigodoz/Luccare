@@ -149,12 +149,20 @@ function DependentDetailContent() {
                   ))}
                 </div>
 
-                <button
-                  onClick={() => removeRoutine(routine.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
-                >
-                  Excluir
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => router.push(`/dependents/${id}/routines/${routine.id}/edit`)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => removeRoutine(routine.id)}
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
+                  >
+                    Excluir
+                  </button>
+                </div>
               </div>
             )}
           </div>

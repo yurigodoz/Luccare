@@ -11,42 +11,36 @@ async function create(dependent) {
 }
 
 async function findById(id) {
-    return prisma.dependent.findUnique({
-        where: { id }
+    return prisma.dependent.findFirst({
+        where: { id, active: true }
     });
 }
 
 async function findByIds(ids) {
     return prisma.dependent.findMany({
-        where: { id: { in: ids } }
+        where: { id: { in: ids }, active: true }
+    });
+}
+
+async function update(id, data) {
+    return prisma.dependent.update({
+        where: { id },
+        data
     });
 }
 
 async function deleteById(id) {
     return prisma.$transaction(async (tx) => {
-        // Deletar logs dos schedules deste dependente
-        await tx.routineLog.deleteMany({
-            where: { schedule: { dependentId: id } }
+        // Desativar rotinas ativas do dependente
+        await tx.routine.updateMany({
+            where: { dependentId: id, active: true },
+            data: { active: false }
         });
 
-        // Deletar schedules
-        await tx.routineSchedule.deleteMany({
-            where: { dependentId: id }
-        });
-
-        // Deletar rotinas (times e daysOfWeek têm onDelete: Cascade)
-        await tx.routine.deleteMany({
-            where: { dependentId: id }
-        });
-
-        // Deletar links de acesso
-        await tx.dependentUser.deleteMany({
-            where: { dependentId: id }
-        });
-
-        // Deletar o dependente
-        return tx.dependent.delete({
-            where: { id }
+        // Soft delete do dependente
+        return tx.dependent.update({
+            where: { id },
+            data: { active: false }
         });
     });
 }
@@ -55,5 +49,6 @@ module.exports = {
     create,
     findById,
     findByIds,
+    update,
     deleteById
 };
