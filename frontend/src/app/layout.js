@@ -37,7 +37,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-blue-50`}
       >
         <ServiceWorkerRegister />
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col max-w-[800px] mx-auto">
           <main className="flex-1">
             {children}
           </main>
