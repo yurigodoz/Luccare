@@ -87,6 +87,7 @@ function NewDependentContent() {
             placeholder="Ex: NBIA5, alergia a glúten..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            maxLength={500}
             rows={3}
             className="w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
           />
