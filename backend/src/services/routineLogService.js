@@ -16,6 +16,10 @@ async function upsertScheduleLog(scheduleId, userId, status, notes) {
     const hasAccess = schedule.dependent.users.some(u => u.userId === userId);
     if (!hasAccess) throw new BusinessError('Sem permissão!');
 
+    if (notes && notes.length > 200) {
+        throw new BusinessError('Observação deve ter no máximo 200 caracteres.');
+    }
+
     const log = await routineLogRepository.upsertLog(scheduleId, userId, status, notes);
 
     await auditLogRepository.create({

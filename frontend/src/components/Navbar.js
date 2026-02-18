@@ -23,7 +23,7 @@ export default function Navbar() {
   return (
     <>
       {/* Desktop: top bar */}
-      <header className="hidden sm:block bg-blue-600 text-white shadow-md">
+      <header className="hidden sm:block bg-blue-600 text-white shadow-md fixed top-0 left-0 right-0 z-50">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="font-bold text-lg">
             💙 Luccare

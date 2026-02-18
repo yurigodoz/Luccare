@@ -9,6 +9,12 @@ async function createDependent(data, userId) {
         if (!data.name) {
             throw new BusinessError('Nome do dependente é obrigatório');
         }
+        if (data.name.length > 25) {
+            throw new BusinessError('Nome do dependente deve ter no máximo 25 caracteres.');
+        }
+        if (data.notes && data.notes.length > 500) {
+            throw new BusinessError('Observações devem ter no máximo 500 caracteres.');
+        }
 
         const dependent = await dependentRepository.create({
             name: data.name,
@@ -109,6 +115,12 @@ async function updateDependent(id, data, userId) {
 
         if (!data.name) {
             throw new BusinessError('Nome do dependente é obrigatório');
+        }
+        if (data.name.length > 25) {
+            throw new BusinessError('Nome do dependente deve ter no máximo 25 caracteres.');
+        }
+        if (data.notes && data.notes.length > 500) {
+            throw new BusinessError('Observações devem ter no máximo 500 caracteres.');
         }
 
         const updated = await dependentRepository.update(id, {

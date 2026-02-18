@@ -6,6 +6,9 @@ async function createUser(data) {
         if (!data.name || !data.email || !data.password) {
             throw new BusinessError('Nome, e-mail e senha são obrigatórios!');
         }
+        if (data.name.length > 50) {
+            throw new BusinessError('Nome deve ter no máximo 50 caracteres.');
+        }
 
         const response = await fetch(`${process.env.AUTH_API_URL}/auth/register`, {
             method: 'POST',

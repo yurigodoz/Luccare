@@ -340,6 +340,7 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
           placeholder="Observação (opcional)"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          maxLength={200}
           className="
             w-full mt-2
             rounded-lg border border-gray-300
@@ -395,6 +396,7 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
           placeholder="Observação (opcional)"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          maxLength={200}
           className="
             w-full mt-2
             rounded-lg border border-gray-300

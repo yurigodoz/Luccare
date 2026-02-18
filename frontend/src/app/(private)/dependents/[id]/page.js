@@ -59,7 +59,9 @@ function DependentDetailContent() {
       apiFetch(`/dependents/${id}/routines`),
       apiFetch(`/dependents/${id}`),
     ]);
-    setRoutines(routinesData);
+    setRoutines(
+      [...routinesData].sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'))
+    );
     if (dependent?.name) setDependentName(dependent.name);
     setLoading(false);
   }

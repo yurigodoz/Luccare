@@ -20,6 +20,7 @@ async function createRoutine(data, dependentId, userId) {
         if (!['FAMILY', 'CAREGIVER'].includes(link.role))
             throw new BusinessError('Sem permissão para criar rotinas');
 
+        validateRoutineFields(data);
         validateRoutineTimes(data.times);
 
         const routine = await routineRepository.create({
@@ -103,6 +104,7 @@ async function updateRoutine(routineId, data, userId) {
             throw new BusinessError('Sem permissão para editar rotinas.');
         }
 
+        validateRoutineFields(data);
         validateRoutineTimes(data.times);
 
         const updated = await routineRepository.updateById(routineId, {
@@ -218,6 +220,15 @@ async function deleteRoutine(routineId, userId) {
 
         console.log('Erro no deleteRoutine:', err);
         throw new BusinessError('Erro ao excluir rotina.');
+    }
+}
+
+function validateRoutineFields(data) {
+    if (data.title && data.title.length > 25) {
+        throw new BusinessError('Título da rotina deve ter no máximo 25 caracteres.');
+    }
+    if (data.description && data.description.length > 200) {
+        throw new BusinessError('Descrição da rotina deve ter no máximo 200 caracteres.');
     }
 }
 
