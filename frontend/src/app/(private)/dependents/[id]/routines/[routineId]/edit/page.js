@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { apiFetch } from '@/services/api';
@@ -24,25 +24,44 @@ const DAY_OPTIONS = [
   { value: 6, label: 'Sáb' },
 ];
 
-export default function NewRoutinePage() {
+export default function EditRoutinePage() {
   return (
     <AuthGuard>
-      <NewRoutineContent />
+      <EditRoutineContent />
     </AuthGuard>
   );
 }
 
-function NewRoutineContent() {
-  const { id } = useParams();
+function EditRoutineContent() {
+  const { id, routineId } = useParams();
   const router = useRouter();
 
   const [type, setType] = useState('MEDICATION');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [times, setTimes] = useState(['']);
-  const [daysOfWeek, setDaysOfWeek] = useState([0, 1, 2, 3, 4, 5, 6]);
-  const [loading, setLoading] = useState(false);
+  const [daysOfWeek, setDaysOfWeek] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    async function loadRoutine() {
+      try {
+        const routine = await apiFetch(`/routines/${routineId}`);
+        setType(routine.type || 'MEDICATION');
+        setTitle(routine.title || '');
+        setDescription(routine.description || '');
+        setTimes(routine.times?.length ? routine.times : ['']);
+        setDaysOfWeek(routine.daysOfWeek || []);
+      } catch {
+        setError('Erro ao carregar rotina.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRoutine();
+  }, [routineId]);
 
   function addTime() {
     setTimes([...times, '']);
@@ -89,7 +108,7 @@ function NewRoutineContent() {
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
     setError('');
 
     try {
@@ -101,22 +120,30 @@ function NewRoutineContent() {
       };
       if (description.trim()) body.description = description.trim();
 
-      await apiFetch(`/dependents/${id}/routines`, {
-        method: 'POST',
+      await apiFetch(`/routines/${routineId}`, {
+        method: 'PUT',
         body: JSON.stringify(body),
       });
 
       router.push(`/dependents/${id}`);
     } catch (err) {
-      setError(err.message || 'Erro ao criar rotina.');
-      setLoading(false);
+      setError(err.message || 'Erro ao salvar rotina.');
+      setSaving(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-blue-50 p-6">
+        <p>Carregando...</p>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-blue-50 p-6">
       <h1 className="text-2xl font-bold text-blue-900 mb-6">
-        Nova rotina
+        Editar rotina
       </h1>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow p-6 space-y-5">
@@ -260,10 +287,10 @@ function NewRoutineContent() {
 
           <button
             type="submit"
-            disabled={loading || !title.trim()}
+            disabled={saving || !title.trim()}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:opacity-50"
           >
-            {loading ? 'Salvando...' : 'Criar rotina'}
+            {saving ? 'Salvando...' : 'Salvar'}
           </button>
         </div>
       </form>

@@ -115,7 +115,20 @@ async function listByRoutine(req, res, next) {
     }
 }
 
+async function deleteLog(req, res, next) {
+    try {
+        const scheduleId = Number(req.params.scheduleId);
+
+        await routineLogService.removeScheduleLog(scheduleId, req.userId);
+
+        res.status(204).end();
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     upsertLog,
+    deleteLog,
     listByRoutine
 };

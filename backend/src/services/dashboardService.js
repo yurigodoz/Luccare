@@ -2,11 +2,12 @@ const prisma = require('../database/prisma');
 const dependentUserRepository = require('../repositories/dependentUserRepository');
 const routineScheduleRepository = require('../repositories/routineScheduleRepository');
 const BusinessError = require('../errors/BusinessError');
+const { getTodayForTimezone } = require('../utils/dateUtils');
 
-async function getTodayOverview(userId) {
+async function getTodayOverview(userId, timezone) {
     try {
-        const today = getStartOfDay(new Date());
-        const currentDayOfWeek = today.getDay();
+        const today = getTodayForTimezone(timezone);
+        const currentDayOfWeek = today.getUTCDay();
 
         const dependentRoutines = await dependentUserRepository.getDependentRoutinesForToday(userId, currentDayOfWeek);
 
@@ -27,12 +28,6 @@ async function getTodayOverview(userId) {
         console.log('Erro no getTodayOverview:', err);
         throw new BusinessError('Erro ao buscar resumo do dia.');
     }
-}
-
-function getStartOfDay(date) {
-    const day = new Date(date);
-    day.setHours(0, 0, 0, 0);
-    return day;
 }
 
 async function ensureSchedulesExist(routines, scheduledDate) {

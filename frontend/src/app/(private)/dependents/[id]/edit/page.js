@@ -1,31 +1,49 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { apiFetch } from '@/services/api';
 
-export default function NewDependentPage() {
+export default function EditDependentPage() {
   return (
     <AuthGuard>
-      <NewDependentContent />
+      <EditDependentContent />
     </AuthGuard>
   );
 }
 
-function NewDependentContent() {
+function EditDependentContent() {
+  const { id } = useParams();
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [notes, setNotes] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    async function loadDependent() {
+      try {
+        const dep = await apiFetch(`/dependents/${id}`);
+        setName(dep.name || '');
+        setBirthDate(dep.birthDate ? new Date(dep.birthDate).toISOString().split('T')[0] : '');
+        setNotes(dep.notes || '');
+      } catch (err) {
+        setError('Erro ao carregar dependente.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDependent();
+  }, [id]);
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!name.trim()) return;
 
-    setLoading(true);
+    setSaving(true);
     setError('');
 
     try {
@@ -33,22 +51,43 @@ function NewDependentContent() {
       if (birthDate) body.birthDate = birthDate;
       if (notes.trim()) body.notes = notes.trim();
 
-      await apiFetch('/dependents', {
-        method: 'POST',
+      await apiFetch(`/dependents/${id}`, {
+        method: 'PUT',
         body: JSON.stringify(body),
       });
 
       router.push('/dependents');
     } catch (err) {
-      setError(err.message || 'Erro ao cadastrar dependente.');
-      setLoading(false);
+      setError(err.message || 'Erro ao atualizar dependente.');
+      setSaving(false);
     }
+  }
+
+  async function handleDelete() {
+    if (!confirm('Deseja excluir este dependente?')) return;
+
+    try {
+      await apiFetch(`/dependents/${id}`, {
+        method: 'DELETE',
+      });
+      router.push('/dependents');
+    } catch (err) {
+      setError(err.message || 'Erro ao excluir dependente.');
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-blue-50 p-6">
+        <p className="text-gray-800">Carregando...</p>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-blue-50 p-6">
       <h1 className="text-2xl font-bold text-blue-900 mb-6">
-        Novo dependente
+        Editar dependente
       </h1>
 
       <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow p-6 space-y-4">
@@ -105,13 +144,23 @@ function NewDependentContent() {
 
           <button
             type="submit"
-            disabled={loading || !name.trim()}
+            disabled={saving || !name.trim()}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:opacity-50"
           >
-            {loading ? 'Salvando...' : 'Cadastrar'}
+            {saving ? 'Salvando...' : 'Salvar'}
           </button>
         </div>
       </form>
+
+      <div className="mt-6 text-center">
+        <button
+          type="button"
+          onClick={handleDelete}
+          className="text-red-600 hover:text-red-800 text-sm underline"
+        >
+          Excluir dependente
+        </button>
+      </div>
     </div>
   );
 }

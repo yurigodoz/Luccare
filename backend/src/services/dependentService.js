@@ -2,6 +2,7 @@ const dependentRepository = require('../repositories/dependentRepository');
 const dependentUserRepository = require('../repositories/dependentUserRepository');
 const auditLogRepository = require('../repositories/auditLogRepository');
 const BusinessError = require('../errors/BusinessError');
+const { parseDate } = require('../utils/dateUtils');
 
 async function createDependent(data, userId) {
     try {
@@ -11,11 +12,19 @@ async function createDependent(data, userId) {
 
         const dependent = await dependentRepository.create({
             name: data.name,
-            birthDate: data.birthDate ? new Date(data.birthDate) : null,
+            birthDate: parseDate(data.birthDate),
             notes: data.notes || null
         });
 
         await dependentUserRepository.addLink(dependent.id, userId, 'FAMILY');
+
+        await auditLogRepository.create({
+            userId,
+            action: 'CREATE_DEPENDENT',
+            entity: 'Dependent',
+            entityId: dependent.id,
+            details: dependent
+        });
 
         return dependent;
     } catch (err) {
@@ -67,6 +76,9 @@ async function deleteDependent(id, userId) {
         }
 
         const dependent = await dependentRepository.findById(id);
+        if (!dependent) {
+            throw new BusinessError('Dependente não encontrado.');
+        }
 
         await dependentRepository.deleteById(id);
 
@@ -75,7 +87,7 @@ async function deleteDependent(id, userId) {
             action: 'DELETE_DEPENDENT',
             entity: 'Dependent',
             entityId: id,
-            details: { dependent }
+            details: dependent
         });
     } catch (err) {
         if (err instanceof BusinessError) throw err;
@@ -85,9 +97,47 @@ async function deleteDependent(id, userId) {
     }
 }
 
+async function updateDependent(id, data, userId) {
+    try {
+        const link = await dependentUserRepository.findLink(id, userId);
+        if (!link) {
+            throw new BusinessError('Dependente não encontrado.');
+        }
+        if (link.role !== 'FAMILY') {
+            throw new BusinessError('Apenas familiares podem editar dependentes.');
+        }
+
+        if (!data.name) {
+            throw new BusinessError('Nome do dependente é obrigatório');
+        }
+
+        const updated = await dependentRepository.update(id, {
+            name: data.name,
+            birthDate: parseDate(data.birthDate),
+            notes: data.notes || null
+        });
+
+        await auditLogRepository.create({
+            userId,
+            action: 'UPDATE_DEPENDENT',
+            entity: 'Dependent',
+            entityId: id,
+            details: updated
+        });
+
+        return updated;
+    } catch (err) {
+        if (err instanceof BusinessError) throw err;
+
+        console.log('Erro no updateDependent:', err);
+        throw new BusinessError('Erro ao atualizar dependente.');
+    }
+}
+
 module.exports = {
     createDependent,
     listDependentsByUser,
     getDependentById,
+    updateDependent,
     deleteDependent
 };
