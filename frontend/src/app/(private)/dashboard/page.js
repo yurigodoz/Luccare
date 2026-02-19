@@ -59,7 +59,11 @@ function groupByTime(data, selectedDepIds, selectedStatuses) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([time, items]) => ({
       time,
-      items: items.sort((a, b) => a.dependentName.localeCompare(b.dependentName)),
+      items: items.sort((a, b) => {
+        const byTitle = a.title.localeCompare(b.title, 'pt-BR');
+        if (byTitle !== 0) return byTitle;
+        return a.dependentName.localeCompare(b.dependentName, 'pt-BR');
+      }),
     }));
 }
 
@@ -164,8 +168,8 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50 p-6">
-      <h1 className="text-2xl font-bold text-blue-900 mb-4">
+    <div className="min-h-screen bg-blue-50 p-2">
+      <h1 className="text-2xl font-bold text-blue-900 mt-2 mb-4">
         Rotina de hoje
       </h1>
 
@@ -247,7 +251,7 @@ function DashboardContent() {
 
 function TimeGroup({ group, onUpdateLog, onDeleteLog }) {
   return (
-    <div className="bg-white rounded-2xl shadow-md p-5 border border-gray-100">
+    <div className="bg-white rounded-2xl shadow-md p-2 border border-gray-100">
       <h2 className="font-bold text-lg text-gray-900 mb-4">
         🕐 {group.time}
       </h2>
@@ -283,6 +287,7 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
   const [notes, setNotes] = useState(item.notes || '');
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
 
   function startEditing() {
     setNotes(item.notes || '');
@@ -310,14 +315,32 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
     <p className="text-xs text-blue-600 font-medium">{item.dependentName}</p>
   );
 
+  const titleBlock = (
+    <div className="mb-2">
+      <div className="flex items-center gap-1">
+        <p className="font-semibold text-gray-900">{item.title}</p>
+        {item.description && (
+          <button
+            onClick={() => setShowDescription(v => !v)}
+            className="text-gray-400 hover:text-blue-500 text-2xl sm:text-base leading-none flex-shrink-0"
+            aria-label="Ver descrição"
+          >
+            ℹ
+          </button>
+        )}
+      </div>
+      {showDescription && item.description && (
+        <p className="text-sm text-gray-600 mt-1 leading-snug whitespace-pre-wrap">{item.description}</p>
+      )}
+      {dependentLabel}
+    </div>
+  );
+
   // Pendente
   if (!status) {
     return (
       <div className="rounded-xl border p-4 transition bg-orange-50 border-orange-200">
-        <div className="mb-2">
-          <p className="font-semibold text-gray-900">{item.title}</p>
-          {dependentLabel}
-        </div>
+        {titleBlock}
 
         <div className="grid grid-cols-2 gap-2 mb-2">
           <button
@@ -357,10 +380,7 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
   if (editing) {
     return (
       <div className={`rounded-xl border p-4 transition ${config.bg}`}>
-        <div className="mb-2">
-          <p className="font-semibold text-gray-900">{item.title}</p>
-          {dependentLabel}
-        </div>
+        {titleBlock}
 
         <div className="grid grid-cols-2 gap-2 mb-2">
           <button
@@ -412,10 +432,7 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
   // DONE ou SKIPPED - visualização
   return (
     <div className={`rounded-xl border p-4 transition ${config.bg}`}>
-      <div className="mb-2">
-        <p className="font-semibold text-gray-900">{item.title}</p>
-        {dependentLabel}
-      </div>
+      {titleBlock}
 
       <div className="grid grid-cols-2 gap-2">
         <span className={`font-semibold text-sm ${config.labelClass} flex items-center justify-center`}>

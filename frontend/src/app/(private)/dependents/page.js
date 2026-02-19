@@ -34,7 +34,7 @@ function DependentContent() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50 p-6">
+    <div className="min-h-screen bg-blue-50 p-3">
       <h1 className="text-2xl font-bold text-blue-900 mb-6">
         Dependentes
       </h1>
@@ -63,7 +63,7 @@ function DependentContent() {
 
             {(dep.birthDate || dep.notes) && (
               <div className="mt-1 text-sm text-gray-500">
-                {dep.birthDate && <span>{new Date(dep.birthDate).toLocaleDateString('pt-BR')}</span>}
+                {dep.birthDate && <span>{dep.birthDate.split('T')[0].split('-').reverse().join('/')}</span>}
                 {dep.birthDate && dep.notes && <span> · </span>}
                 {dep.notes && <span>{dep.notes}</span>}
               </div>

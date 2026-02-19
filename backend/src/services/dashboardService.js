@@ -67,6 +67,7 @@ function groupSchedulesByDependent(schedules) {
         grouped[dependentId].items.push({
             scheduleId: schedule.id,
             title: schedule.routine.title,
+            description: schedule.routine.description,
             type: schedule.routine.type,
             time: schedule.scheduledTime,
             done: schedule.log !== null,

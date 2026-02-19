@@ -86,7 +86,7 @@ function DependentDetailContent() {
   }
 
   return (
-    <div className="min-h-screen bg-blue-50 p-6">
+    <div className="min-h-screen bg-blue-50 p-3">
       <h1 className="text-2xl font-bold text-blue-900 mb-6">
         Rotinas {dependentName ? `de ${dependentName}` : 'do dependente'}
       </h1>

@@ -10,7 +10,8 @@ async function getTodaySchedules(dependentIds, scheduledDate) {
             routine: {
                 select: {
                     title: true,
-                    type: true
+                    type: true,
+                    description: true
                 }
             },
             log: {
