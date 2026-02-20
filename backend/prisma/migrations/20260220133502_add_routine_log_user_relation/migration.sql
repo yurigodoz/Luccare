@@ -1,0 +1,2 @@
+-- AddForeignKey
+ALTER TABLE "RoutineLog" ADD CONSTRAINT "RoutineLog_doneBy_fkey" FOREIGN KEY ("doneBy") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

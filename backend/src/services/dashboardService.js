@@ -72,7 +72,9 @@ function groupSchedulesByDependent(schedules) {
             time: schedule.scheduledTime,
             done: schedule.log !== null,
             status: schedule.log?.status || null,
-            notes: schedule.log?.notes || null
+            notes: schedule.log?.notes || null,
+            completedAt: schedule.log?.dateTime || null,
+            doneBy: schedule.log?.user?.name || null
         });
     }
 

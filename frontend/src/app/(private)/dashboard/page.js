@@ -174,8 +174,8 @@ function DashboardContent() {
       </h1>
 
       {/* Filtro de dependentes */}
-      <div className="mb-3">
-        <div className="flex flex-wrap gap-2">
+      <div className="mb-2">
+        <div className="flex flex-wrap gap-1">
           <button
             onClick={toggleAllDeps}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
@@ -203,7 +203,7 @@ function DashboardContent() {
       </div>
 
       {/* Filtro de status */}
-      <div className="mb-5">
+      <div className="mb-3">
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => toggleStatus('PENDING')}
@@ -229,7 +229,7 @@ function DashboardContent() {
       </div>
 
       {/* Grupos por horário */}
-      <div className="space-y-5">
+      <div className="space-y-3">
         {timeGroups.length === 0 ? (
           <p className="text-gray-500 text-center py-8">
             Nenhuma rotina encontrada com os filtros selecionados.
@@ -252,7 +252,7 @@ function DashboardContent() {
 function TimeGroup({ group, onUpdateLog, onDeleteLog }) {
   return (
     <div className="bg-white rounded-2xl shadow-md p-2 border border-gray-100">
-      <h2 className="font-bold text-lg text-gray-900 mb-4">
+      <h2 className="font-bold text-lg text-gray-900 mb-1">
         🕐 {group.time}
       </h2>
 
@@ -288,6 +288,7 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   function startEditing() {
     setNotes(item.notes || '');
@@ -435,9 +436,20 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
       {titleBlock}
 
       <div className="grid grid-cols-2 gap-2">
-        <span className={`font-semibold text-sm ${config.labelClass} flex items-center justify-center`}>
-          {config.label}
-        </span>
+        <div className="flex items-center justify-center gap-1">
+          <span className={`font-semibold text-sm ${config.labelClass}`}>
+            {config.label}
+          </span>
+          {(item.completedAt || item.doneBy || item.notes) && (
+            <button
+              onClick={() => setShowInfo(v => !v)}
+              className="text-gray-400 hover:text-blue-500 text-2xl sm:text-base leading-none flex-shrink-0"
+              aria-label="Ver detalhes"
+            >
+              ℹ
+            </button>
+          )}
+        </div>
         <button
           onClick={startEditing}
           className="bg-white hover:bg-gray-100 text-gray-600 border border-gray-300 px-3 py-1.5 rounded-lg text-sm font-medium"
@@ -445,6 +457,19 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
           ✏️ Editar
         </button>
       </div>
+
+      {showInfo && (item.completedAt || item.doneBy || item.notes) && (
+        <div className="mt-2 text-sm text-gray-500 space-y-0.5">
+          {item.doneBy && <p>Por: {item.doneBy}</p>}
+          {item.completedAt && (
+            <p>Em: {new Date(item.completedAt).toLocaleString('pt-BR', {
+              day: '2-digit', month: '2-digit', year: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+            })}</p>
+          )}
+          {item.notes && <p>Obs.: {item.notes}</p>}
+        </div>
+      )}
     </div>
   );
 }

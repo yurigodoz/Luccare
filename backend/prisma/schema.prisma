@@ -17,7 +17,8 @@ model User {
   email     String   @unique
   createdAt DateTime @default(now())
 
-  dependents DependentUser[]
+  dependents  DependentUser[]
+  routineLogs RoutineLog[]
 }
 
 model Dependent {
@@ -135,6 +136,7 @@ model RoutineLog {
   notes      String?
 
   schedule RoutineSchedule @relation(fields: [scheduleId], references: [id])
+  user     User            @relation(fields: [doneBy], references: [id])
 }
 
 enum LogStatus {
