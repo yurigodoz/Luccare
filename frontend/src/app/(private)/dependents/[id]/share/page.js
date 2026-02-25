@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { apiFetch } from '@/services/api';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 
 const ROLE_LABELS = {
   FAMILY: 'Familiar',
@@ -40,6 +41,8 @@ export default function ShareDependentPage() {
     });
     loadUsers();
   }, [id]);
+
+  useRefetchOnFocus(loadUsers);
 
   async function handleShare() {
     if (!email.trim()) return;

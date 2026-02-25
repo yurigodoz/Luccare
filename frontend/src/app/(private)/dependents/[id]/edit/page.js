@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { apiFetch } from '@/services/api';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 
 export default function EditDependentPage() {
   return (
@@ -23,21 +24,24 @@ function EditDependentContent() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
-    async function loadDependent() {
-      try {
-        const dep = await apiFetch(`/dependents/${id}`);
-        setName(dep.name || '');
-        setBirthDate(dep.birthDate ? new Date(dep.birthDate).toISOString().split('T')[0] : '');
-        setNotes(dep.notes || '');
-      } catch (err) {
-        setError('Erro ao carregar dependente.');
-      } finally {
-        setLoading(false);
-      }
+  async function loadDependent() {
+    try {
+      const dep = await apiFetch(`/dependents/${id}`);
+      setName(dep.name || '');
+      setBirthDate(dep.birthDate ? new Date(dep.birthDate).toISOString().split('T')[0] : '');
+      setNotes(dep.notes || '');
+    } catch (err) {
+      setError('Erro ao carregar dependente.');
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     loadDependent();
   }, [id]);
+
+  useRefetchOnFocus(loadDependent);
 
   async function handleSubmit(e) {
     e.preventDefault();

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { apiFetch } from '@/services/api';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 
 const TYPE_LABELS = {
   MEDICATION: 'Medicamento',
@@ -69,6 +70,8 @@ function DependentDetailContent() {
   useEffect(() => {
     load();
   }, [id]);
+
+  useRefetchOnFocus(load);
 
   async function removeRoutine(routineId) {
     if (!confirm('Excluir rotina?')) return;

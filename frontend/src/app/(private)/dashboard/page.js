@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import { apiFetch } from '@/services/api';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 
 export default function DashboardPage() {
   return (
@@ -119,6 +120,8 @@ function DashboardContent() {
   useEffect(() => {
     load();
   }, []);
+
+  useRefetchOnFocus(load);
 
   async function updateLog(scheduleId, status, notes) {
     await apiFetch(`/schedules/${scheduleId}/log`, {

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { apiFetch } from '@/services/api';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 
 export default function DependentsPage() {
   return (
@@ -28,6 +29,8 @@ function DependentContent() {
   useEffect(() => {
     load();
   }, []);
+
+  useRefetchOnFocus(load);
 
   function toggleExpand(id) {
     setExpandedId(expandedId === id ? null : id);

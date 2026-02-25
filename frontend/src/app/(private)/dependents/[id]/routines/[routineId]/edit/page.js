@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { apiFetch } from '@/services/api';
+import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 
 const TYPES = [
   { value: 'MEDICATION', label: 'Medicamento', color: 'bg-blue-100 text-blue-700 border-blue-300' },
@@ -45,23 +46,26 @@ function EditRoutineContent() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    async function loadRoutine() {
-      try {
-        const routine = await apiFetch(`/routines/${routineId}`);
-        setType(routine.type || 'MEDICATION');
-        setTitle(routine.title || '');
-        setDescription(routine.description || '');
-        setTimes(routine.times?.length ? routine.times : ['']);
-        setDaysOfWeek(routine.daysOfWeek || []);
-      } catch {
-        setError('Erro ao carregar rotina.');
-      } finally {
-        setLoading(false);
-      }
+  async function loadRoutine() {
+    try {
+      const routine = await apiFetch(`/routines/${routineId}`);
+      setType(routine.type || 'MEDICATION');
+      setTitle(routine.title || '');
+      setDescription(routine.description || '');
+      setTimes(routine.times?.length ? routine.times : ['']);
+      setDaysOfWeek(routine.daysOfWeek || []);
+    } catch {
+      setError('Erro ao carregar rotina.');
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     loadRoutine();
   }, [routineId]);
+
+  useRefetchOnFocus(loadRoutine);
 
   function addTime() {
     setTimes([...times, '']);
