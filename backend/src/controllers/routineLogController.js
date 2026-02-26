@@ -1,4 +1,5 @@
 const routineLogService = require('../services/routineLogService');
+const { getIo } = require('../socket');
 
 /**
  * @swagger
@@ -67,12 +68,14 @@ async function upsertLog(req, res, next) {
         const scheduleId = Number(req.params.scheduleId);
         const { status, notes } = req.body;
 
-        const log = await routineLogService.upsertScheduleLog(
+        const { log, dependentId } = await routineLogService.upsertScheduleLog(
             scheduleId,
             req.userId,
             status,
             notes
         );
+
+        getIo().to(`dep-${dependentId}`).emit('schedule-updated', { dependentId });
 
         res.json(log);
     } catch (err) {
@@ -119,7 +122,9 @@ async function deleteLog(req, res, next) {
     try {
         const scheduleId = Number(req.params.scheduleId);
 
-        await routineLogService.removeScheduleLog(scheduleId, req.userId);
+        const { dependentId } = await routineLogService.removeScheduleLog(scheduleId, req.userId);
+
+        getIo().to(`dep-${dependentId}`).emit('schedule-updated', { dependentId });
 
         res.status(204).end();
     } catch (err) {

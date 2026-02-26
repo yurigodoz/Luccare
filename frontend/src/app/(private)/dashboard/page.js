@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import AuthGuard from '@/components/AuthGuard';
 import { apiFetch } from '@/services/api';
 import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
+import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 
 export default function DashboardPage() {
   return (
@@ -86,6 +87,8 @@ function DashboardContent() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [data]);
 
+  const dependentIds = useMemo(() => data.map((d) => d.dependentId), [data]);
+
   useEffect(() => {
     if (!initialized && dependents.length > 0) {
       const savedDeps = loadFilter('dashboard-dep-filter', []);
@@ -122,6 +125,7 @@ function DashboardContent() {
   }, []);
 
   useRefetchOnFocus(load);
+  useRealtimeSync(load, dependentIds);
 
   async function updateLog(scheduleId, status, notes) {
     await apiFetch(`/schedules/${scheduleId}/log`, {

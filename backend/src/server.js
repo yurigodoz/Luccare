@@ -1,6 +1,9 @@
 const dotenv = require('dotenv');
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
+const { Server } = require('socket.io');
+const { setIo } = require('./socket');
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const dependentRoutes = require('./routes/dependentRoutes');
@@ -35,7 +38,21 @@ app.get('/health', (req, res) => {
 	res.json({status: 'ok'});
 });
 
-app.listen(process.env.PORT, () => {
+const httpServer = http.createServer(app);
+
+const io = new Server(httpServer, {
+	cors: { origin: '*' },
+});
+
+setIo(io);
+
+io.on('connection', (socket) => {
+	socket.on('join-dependent', (dependentId) => {
+		socket.join(`dep-${dependentId}`);
+	});
+});
+
+httpServer.listen(process.env.PORT, () => {
 	console.log(`Servidor rodando na porta ${process.env.PORT}`);
 });
 

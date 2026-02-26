@@ -30,7 +30,7 @@ async function upsertScheduleLog(scheduleId, userId, status, notes) {
         details: { scheduleId, status, notes }
     });
 
-    return log;
+    return { log, dependentId: schedule.dependentId };
 }
 
 async function listByRoutine(routineId, userId) {
@@ -67,6 +67,8 @@ async function removeScheduleLog(scheduleId, userId) {
         entityId: scheduleId,
         details: { scheduleId, previousStatus: schedule.log.status }
     });
+
+    return { dependentId: schedule.dependentId };
 }
 
 module.exports = {
