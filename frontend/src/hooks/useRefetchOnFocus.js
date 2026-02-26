@@ -5,12 +5,20 @@ export function useRefetchOnFocus(callback) {
   callbackRef.current = callback;
 
   useEffect(() => {
-    const handler = () => callbackRef.current();
-    window.addEventListener('focus', handler);
-    window.addEventListener('online', handler);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        callbackRef.current();
+      }
+    };
+
+    const handleOnline = () => callbackRef.current();
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('online', handleOnline);
+
     return () => {
-      window.removeEventListener('focus', handler);
-      window.removeEventListener('online', handler);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('online', handleOnline);
     };
   }, []);
 }

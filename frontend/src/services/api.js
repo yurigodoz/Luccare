@@ -66,6 +66,10 @@ export async function apiFetch(path, options = {}) {
             const retryText = await retryResponse.text();
             return retryText ? JSON.parse(retryText) : null;
         } catch {
+            if (!navigator.onLine) {
+                throw new Error('Sem conexão');
+            }
+            
             localStorage.clear();
             window.location.href = '/';
             throw new Error('Sessão expirada');
