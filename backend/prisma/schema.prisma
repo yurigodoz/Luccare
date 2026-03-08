@@ -17,8 +17,9 @@ model User {
   email     String   @unique
   createdAt DateTime @default(now())
 
-  dependents  DependentUser[]
-  routineLogs RoutineLog[]
+  dependents      DependentUser[]
+  routineLogs     RoutineLog[]
+  dayTypeOffsets  DependentDayTypeOffset[]
 }
 
 model Dependent {
@@ -29,9 +30,10 @@ model Dependent {
   active    Boolean   @default(true)
   createdAt DateTime  @default(now())
 
-  users            DependentUser[]
-  routines         Routine[]
-  routineSchedules RoutineSchedule[]
+  users                DependentUser[]
+  routines             Routine[]
+  routineSchedules     RoutineSchedule[]
+  dayTypeOffsets       DependentDayTypeOffset[]
 }
 
 model DependentUser {
@@ -147,6 +149,20 @@ enum LogStatus {
 // ============================================
 // AUDITORIA
 // ============================================
+
+model DependentDayTypeOffset {
+  dependentId Int
+  date        DateTime    @db.Date
+  type        RoutineType
+  offsetHours Int
+  setBy       Int
+  updatedAt   DateTime    @updatedAt
+
+  dependent Dependent @relation(fields: [dependentId], references: [id])
+  user      User      @relation(fields: [setBy], references: [id])
+
+  @@id([dependentId, date, type])
+}
 
 model AuditLog {
   id        Int      @id @default(autoincrement())
