@@ -430,7 +430,7 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
   }
 
   const offsetLabel = item.offsetHours !== 0
-    ? <span className="text-xs text-amber-600 ml-1">({item.offsetHours > 0 ? '+' : ''}{item.offsetHours}h · orig. {item.time})</span>
+    ? <span className="text-xs text-amber-600 ml-1">({item.offsetHours > 0 ? '+' : ''}{item.offsetHours}h)</span>
     : null;
 
   const dependentLabel = (
