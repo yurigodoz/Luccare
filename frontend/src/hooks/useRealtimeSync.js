@@ -1,19 +1,29 @@
 import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-export function useRealtimeSync(callback, dependentIds) {
+export function useRealtimeSync(callback, dependentIds, extraListeners = {}) {
   const callbackRef = useRef(callback);
   callbackRef.current = callback;
+
+  const extraListenersRef = useRef(extraListeners);
+  extraListenersRef.current = extraListeners;
 
   const socketRef = useRef(null);
 
   useEffect(() => {
-    const socket = io(process.env.NEXT_PUBLIC_API_URL);
+    const token = localStorage.getItem('accessToken');
+    const socket = io(process.env.NEXT_PUBLIC_API_URL, {
+      auth: token ? { token: `Bearer ${token}` } : undefined,
+    });
     socketRef.current = socket;
 
     socket.on('schedule-updated', () => {
       callbackRef.current();
     });
+
+    for (const [event, handler] of Object.entries(extraListenersRef.current)) {
+      socket.on(event, (data) => handler(data));
+    }
 
     return () => {
       socket.disconnect();

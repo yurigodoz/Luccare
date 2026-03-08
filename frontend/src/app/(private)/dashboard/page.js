@@ -6,6 +6,17 @@ import { apiFetch } from '@/services/api';
 import { useRefetchOnFocus } from '@/hooks/useRefetchOnFocus';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 
+const TYPE_LABELS = {
+  MEDICATION: 'Medicamento',
+  FEEDING: 'Alimentação',
+  THERAPY: 'Terapia',
+  HYGIENE: 'Higiene',
+  EXERCISE: 'Exercício',
+  OTHER: 'Outro',
+};
+
+const ALL_TYPES = Object.keys(TYPE_LABELS);
+
 export default function DashboardPage() {
   return (
     <AuthGuard>
@@ -26,14 +37,28 @@ function saveFilter(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
-function groupByTime(data, selectedDepIds, selectedStatuses) {
+function applyTimeOffset(timeStr, offsetHours) {
+  const [h, m] = timeStr.split(':').map(Number);
+  const total = ((h * 60 + m + offsetHours * 60) % 1440 + 1440) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+function getOffset(typeOffsets, dependentId, type) {
+  return typeOffsets.find((o) => o.dependentId === dependentId && o.type === type)?.offsetHours ?? 0;
+}
+
+function groupByTime(data, selectedDepIds, selectedStatuses, typeOffsets) {
   const allItems = [];
   for (const dep of data) {
     for (const item of dep.items) {
+      const offsetHours = getOffset(typeOffsets, dep.dependentId, item.type);
+      const displayTime = applyTimeOffset(item.time, offsetHours);
       allItems.push({
         ...item,
         dependentId: dep.dependentId,
         dependentName: dep.dependentName,
+        displayTime,
+        offsetHours,
       });
     }
   }
@@ -51,10 +76,10 @@ function groupByTime(data, selectedDepIds, selectedStatuses) {
 
   const groups = {};
   for (const item of filtered) {
-    if (!groups[item.time]) {
-      groups[item.time] = [];
+    if (!groups[item.displayTime]) {
+      groups[item.displayTime] = [];
     }
-    groups[item.time].push(item);
+    groups[item.displayTime].push(item);
   }
 
   return Object.entries(groups)
@@ -75,6 +100,8 @@ function DashboardContent() {
   const [selectedDepIds, setSelectedDepIds] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [initialized, setInitialized] = useState(false);
+  const [typeOffsets, setTypeOffsets] = useState([]);
+  const [showOffsetPanel, setShowOffsetPanel] = useState(false);
 
   const dependents = useMemo(() => {
     const seen = new Map();
@@ -114,6 +141,13 @@ function DashboardContent() {
     }
   }, [selectedStatuses, initialized]);
 
+  async function loadOffsets() {
+    try {
+      const offsets = await apiFetch('/dashboard/offsets');
+      setTypeOffsets(offsets);
+    } catch {}
+  }
+
   async function load() {
     const res = await apiFetch('/dashboard/today');
     setData(res);
@@ -121,11 +155,11 @@ function DashboardContent() {
   }
 
   useEffect(() => {
-    load();
+    Promise.all([load(), loadOffsets()]);
   }, []);
 
   useRefetchOnFocus(load);
-  useRealtimeSync(load, dependentIds);
+  useRealtimeSync(load, dependentIds, { 'offset-updated': loadOffsets });
 
   async function updateLog(scheduleId, status, notes) {
     await apiFetch(`/schedules/${scheduleId}/log`, {
@@ -140,6 +174,23 @@ function DashboardContent() {
       method: 'DELETE',
     });
     load();
+  }
+
+  async function adjustOffset(dependentId, type, newOffset) {
+    const clamped = Math.max(-12, Math.min(12, newOffset));
+    setTypeOffsets((prev) => {
+      const next = prev.filter((o) => !(o.dependentId === dependentId && o.type === type));
+      if (clamped !== 0) next.push({ dependentId, type, offsetHours: clamped });
+      return next;
+    });
+    try {
+      await apiFetch('/dashboard/offsets', {
+        method: 'PUT',
+        body: JSON.stringify({ dependentId, type, offsetHours: clamped }),
+      });
+    } catch {
+      loadOffsets();
+    }
   }
 
   function toggleDep(id) {
@@ -162,9 +213,11 @@ function DashboardContent() {
   }
 
   const timeGroups = useMemo(
-    () => groupByTime(data, selectedDepIds, selectedStatuses),
-    [data, selectedDepIds, selectedStatuses]
+    () => groupByTime(data, selectedDepIds, selectedStatuses, typeOffsets),
+    [data, selectedDepIds, selectedStatuses, typeOffsets]
   );
+
+  const hasAnyOffset = typeOffsets.some((o) => o.offsetHours !== 0);
 
   if (loading) {
     return <p className="p-6 text-gray-700">Carregando...</p>;
@@ -176,9 +229,66 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-blue-50 p-2">
-      <h1 className="text-2xl font-bold text-blue-900 mt-2 mb-4">
-        Rotina de hoje
-      </h1>
+      <div className="flex items-center justify-between mt-2 mb-4">
+        <h1 className="text-2xl font-bold text-blue-900">
+          Rotina de hoje
+        </h1>
+        <button
+          onClick={() => setShowOffsetPanel((v) => !v)}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border transition ${
+            hasAnyOffset
+              ? 'bg-amber-100 text-amber-800 border-amber-300'
+              : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+          }`}
+        >
+          ⏱ {hasAnyOffset ? 'Ajustes ativos' : 'Ajustar'}
+        </button>
+      </div>
+
+      {/* Painel de offset por tipo */}
+      {showOffsetPanel && (
+        <div className="mb-4 bg-white rounded-2xl shadow p-4 space-y-4 border border-gray-100">
+          <p className="text-sm text-gray-500">
+            Ajuste o horário de exibição das rotinas de hoje por tipo. Positivo atrasa, negativo adianta.
+          </p>
+          {dependents.map((dep) => (
+            <div key={dep.id}>
+              <p className="text-sm font-semibold text-blue-800 mb-2">{dep.name}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {ALL_TYPES.map((type) => {
+                  const offset = getOffset(typeOffsets, dep.id, type);
+                  return (
+                    <div key={type} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                      <span className="text-xs text-gray-700 font-medium truncate mr-2">
+                        {TYPE_LABELS[type]}
+                      </span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => adjustOffset(dep.id, type, offset - 1)}
+                          className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold flex items-center justify-center"
+                        >
+                          −
+                        </button>
+                        <span className={`w-8 text-center text-xs font-semibold ${
+                          offset > 0 ? 'text-amber-700' : offset < 0 ? 'text-blue-700' : 'text-gray-500'
+                        }`}>
+                          {offset > 0 ? `+${offset}h` : offset < 0 ? `${offset}h` : '0'}
+                        </span>
+                        <button
+                          onClick={() => adjustOffset(dep.id, type, offset + 1)}
+                          className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold flex items-center justify-center"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Filtro de dependentes */}
       <div className="mb-2">
@@ -319,14 +429,19 @@ function ScheduleItem({ item, onUpdateLog, onDeleteLog }) {
     setSaving(false);
   }
 
+  const offsetLabel = item.offsetHours !== 0
+    ? <span className="text-xs text-amber-600 ml-1">({item.offsetHours > 0 ? '+' : ''}{item.offsetHours}h · orig. {item.time})</span>
+    : null;
+
   const dependentLabel = (
     <p className="text-xs text-blue-600 font-medium">{item.dependentName}</p>
   );
 
   const titleBlock = (
     <div className="mb-2">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-wrap">
         <p className="font-semibold text-gray-900">{item.title}</p>
+        {offsetLabel}
         {item.description && (
           <button
             onClick={() => setShowDescription(v => !v)}

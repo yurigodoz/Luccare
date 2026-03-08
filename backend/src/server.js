@@ -3,7 +3,7 @@ const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const { Server } = require('socket.io');
-const { setIo } = require('./socket');
+const { setupSocket } = require('./socket');
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const dependentRoutes = require('./routes/dependentRoutes');
@@ -11,6 +11,7 @@ const dependentsShareRoutes = require('./routes/dependentShareRoutes');
 const routineRoutes = require('./routes/routineRoutes');
 const routineLogRoutes = require('./routes/routineLogRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const offsetRoutes = require('./routes/offsetRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const timezoneMiddleware = require('./middlewares/timezoneMiddleware');
 const { startRoutineMonitor } = require('./services/routineMonitor');
@@ -29,6 +30,7 @@ app.use('/dependents', dependentsShareRoutes);
 app.use('/dependents', routineRoutes);
 app.use('/', routineLogRoutes);
 app.use('/dashboard', dashboardRoutes);
+app.use('/dashboard', offsetRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(errorHandler);
 
@@ -44,17 +46,8 @@ const io = new Server(httpServer, {
 	cors: { origin: '*' },
 });
 
-setIo(io);
-
-io.on('connection', (socket) => {
-	socket.on('join-dependent', (dependentId) => {
-		socket.join(`dep-${dependentId}`);
-	});
-});
+setupSocket(io);
 
 httpServer.listen(process.env.PORT, () => {
 	console.log(`Servidor rodando na porta ${process.env.PORT}`);
 });
-
-// Senha superuser Postgres Windows: D3f@ultP0stgr3s!
-// Senha luccare_user Postgres Windows: D3f@ultU$er!
