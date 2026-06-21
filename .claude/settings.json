@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(npm install)",
+      "Bash(npm ci)",
+      "Bash(npx prisma generate)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma migrate status)",
+      "Bash(npx prisma validate)",
+      "Bash(npx prisma format)",
+      "Bash(npx eslint:*)",
+      "Bash(git status)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(node --version)",
+      "Bash(npm --version)"
+    ],
+    "deny": [
+      "Read(./backend/.env)",
+      "Read(./frontend/.env.local)"
+    ],
+    "ask": []
+  }
+}
