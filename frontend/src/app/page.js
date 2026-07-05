@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { apiFetch } from '@/services/api';
 
 export default function LoginPage() {
@@ -11,6 +12,8 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isWarmingUp, setIsWarmingUp] = useState(true);
+  const [emailNotVerified, setEmailNotVerified] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
@@ -65,11 +68,14 @@ export default function LoginPage() {
     setIsRegister(!isRegister);
     setError('');
     setSuccess('');
+    setEmailNotVerified(false);
   }
 
   async function handleLogin(e) {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    setEmailNotVerified(false);
 
     try {
       const data = await apiFetch('/auth/login', {
@@ -82,6 +88,27 @@ export default function LoginPage() {
       window.location.href = '/dashboard';
     } catch (err) {
       setError(err.message);
+      if (err.code === 'EMAIL_NOT_VERIFIED') {
+        setEmailNotVerified(true);
+      }
+    }
+  }
+
+  async function handleResendVerification() {
+    setIsResending(true);
+
+    try {
+      await apiFetch('/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+    } catch (err) {
+      // Resposta é sempre genérica; erro de rede não deve travar o feedback ao usuário.
+    } finally {
+      setIsResending(false);
+      setEmailNotVerified(false);
+      setError('');
+      setSuccess('Se os dados estiverem corretos, um e-mail de verificação foi enviado.');
     }
   }
 
@@ -166,11 +193,30 @@ export default function LoginPage() {
         </form>
 
         {error && (
-          <p className="text-red-500 text-sm text-center mt-4">{error}</p>
+          <div className="text-center mt-4">
+            <p className="text-red-500 text-sm">{error}</p>
+            {emailNotVerified && (
+              <button
+                onClick={handleResendVerification}
+                disabled={isResending}
+                className="mt-2 text-blue-600 hover:underline text-sm font-medium disabled:text-gray-400"
+              >
+                {isResending ? 'Enviando...' : 'Reenviar e-mail de verificação'}
+              </button>
+            )}
+          </div>
         )}
 
         {success && (
           <p className="text-green-600 text-sm text-center mt-4">{success}</p>
+        )}
+
+        {!isRegister && (
+          <p className="text-center text-sm mt-4">
+            <Link href="/esqueci-senha" className="text-blue-600 hover:underline font-medium">
+              Esqueci minha senha
+            </Link>
+          </p>
         )}
 
         <p className="text-center text-sm text-gray-500 mt-4">

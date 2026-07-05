@@ -70,7 +70,9 @@ export async function apiFetch(path, options = {}) {
 
         if (!retryResponse.ok) {
             const errorBody = await retryResponse.json().catch(() => ({}));
-            throw new Error(errorBody.error || 'Erro na requisição');
+            const retryError = new Error(errorBody.message || 'Erro na requisição');
+            if (errorBody.code) retryError.code = errorBody.code;
+            throw retryError;
         }
 
         const retryText = await retryResponse.text();
@@ -79,8 +81,10 @@ export async function apiFetch(path, options = {}) {
 
     if (!response.ok) {
         const errorBody = await response.json().catch(() => ({}));
-        const message = errorBody.error || 'Erro na requisição';
-        throw new Error(message);
+        const message = errorBody.message || 'Erro na requisição';
+        const error = new Error(message);
+        if (errorBody.code) error.code = errorBody.code;
+        throw error;
     }
 
     const text = await response.text();
