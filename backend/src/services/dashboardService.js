@@ -9,7 +9,7 @@ async function getTodayOverview(userId, timezone) {
         const today = getTodayForTimezone(timezone);
         const currentDayOfWeek = today.getUTCDay();
 
-        const dependentRoutines = await dependentUserRepository.getDependentRoutinesForToday(userId, currentDayOfWeek);
+        const dependentRoutines = await dependentUserRepository.getDependentRoutinesForToday(userId, currentDayOfWeek, today);
 
         if (dependentRoutines.length === 0) {
             return [];

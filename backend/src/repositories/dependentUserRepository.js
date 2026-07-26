@@ -49,7 +49,7 @@ async function findLink(dependentId, userId) {
     });
 }
 
-async function getDependentRoutinesForToday(userId, dayOfWeek) {
+async function getDependentRoutinesForToday(userId, dayOfWeek, today) {
     return prisma.dependentUser.findMany({
         where: {
             userId,
@@ -66,7 +66,11 @@ async function getDependentRoutinesForToday(userId, dayOfWeek) {
                                 some: {
                                     dayOfWeek: dayOfWeek
                                 }
-                            }
+                            },
+                            OR: [
+                                { isTemporary: false },
+                                { isTemporary: true, startDate: { lte: today }, endDate: { gte: today } }
+                            ]
                         },
                         select: {
                             id: true,

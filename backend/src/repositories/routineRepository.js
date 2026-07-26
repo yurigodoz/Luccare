@@ -1,13 +1,20 @@
 const prisma = require('../database/prisma');
-const { getUTCToday } = require('../utils/dateUtils');
+const { getUTCToday, computeDaysRemaining } = require('../utils/dateUtils');
 
-function flattenRoutine(routine) {
+function flattenRoutine(routine, today) {
     if (!routine) return routine;
-    return {
+    const flat = {
         ...routine,
         times: routine.times.map(t => t.time),
         daysOfWeek: routine.daysOfWeek.map(d => d.dayOfWeek)
     };
+    if (flat.isTemporary && flat.startDate && flat.endDate) {
+        flat.durationDays = computeDaysRemaining(flat.endDate, flat.startDate) + 1;
+        if (today) {
+            flat.daysRemaining = computeDaysRemaining(flat.endDate, today);
+        }
+    }
+    return flat;
 }
 
 async function create(routine) {
@@ -19,6 +26,9 @@ async function create(routine) {
             description: routine.description,
             active: routine.active,
             createdBy: routine.createdBy,
+            isTemporary: routine.isTemporary ?? false,
+            startDate: routine.startDate ?? null,
+            endDate: routine.endDate ?? null,
             times: {
                 create: routine.times.map(t => ({ time: t }))
             },
@@ -34,15 +44,22 @@ async function create(routine) {
     return flattenRoutine(result);
 }
 
-async function findByDependent(dependentId) {
+async function findByDependent(dependentId, today) {
     const routines = await prisma.routine.findMany({
-        where: { dependentId, active: true },
+        where: {
+            dependentId,
+            active: true,
+            OR: [
+                { isTemporary: false },
+                { isTemporary: true, startDate: { lte: today }, endDate: { gte: today } }
+            ]
+        },
         include: {
             times: true,
             daysOfWeek: true
         }
     });
-    return routines.map(flattenRoutine);
+    return routines.map(r => flattenRoutine(r, today));
 }
 
 async function findById(id) {
@@ -80,6 +97,9 @@ async function updateById(id, data) {
                 type: data.type,
                 title: data.title,
                 description: data.description ?? null,
+                isTemporary: data.isTemporary,
+                startDate: data.startDate,
+                endDate: data.endDate,
                 times: {
                     create: data.times.map(t => ({ time: t }))
                 },

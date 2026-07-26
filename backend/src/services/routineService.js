@@ -3,9 +3,9 @@ const dependentUserRepository = require('../repositories/dependentUserRepository
 const auditLogRepository = require('../repositories/auditLogRepository');
 const prisma = require('../database/prisma');
 const BusinessError = require('../errors/BusinessError');
-const { getUTCToday, isValidTimeString, parseDate, isValidDateString, computeEndDate } = require('../utils/dateUtils');
+const { getUTCToday, getTodayForTimezone, isValidTimeString, parseDate, isValidDateString, computeEndDate } = require('../utils/dateUtils');
 
-async function createRoutine(data, dependentId, userId) {
+async function createRoutine(data, dependentId, userId, timezone) {
     try {
         dependentId = Number(dependentId);
         userId = Number(userId);
@@ -23,6 +23,14 @@ async function createRoutine(data, dependentId, userId) {
         validateRoutineFields(data);
         validateRoutineTimes(data.times);
 
+        const isTemporary = !!data.isTemporary;
+        let startDate = null;
+        let endDate = null;
+        if (isTemporary) {
+            const today = getTodayForTimezone(timezone);
+            ({ startDate, endDate } = validateTemporaryWindow(data, today));
+        }
+
         const routine = await routineRepository.create({
             dependentId,
             type: data.type,
@@ -31,7 +39,10 @@ async function createRoutine(data, dependentId, userId) {
             times: data.times,
             daysOfWeek: data.daysOfWeek,
             active: true,
-            createdBy: userId
+            createdBy: userId,
+            isTemporary,
+            startDate,
+            endDate
         });
 
         await auditLogRepository.create({
@@ -51,13 +62,14 @@ async function createRoutine(data, dependentId, userId) {
     }
 }
 
-async function listRoutines(dependentId, userId) {
+async function listRoutines(dependentId, userId, timezone) {
     try {
         const link = await dependentUserRepository.findLink(dependentId, userId);
 
         if (!link) throw new BusinessError('Você não tem acesso a este dependente');
 
-        return routineRepository.findByDependent(dependentId);
+        const today = getTodayForTimezone(timezone);
+        return routineRepository.findByDependent(dependentId, today);
     } catch (err) {
         if (err instanceof BusinessError) throw err;
 
@@ -88,7 +100,7 @@ async function getRoutine(routineId, userId) {
     }
 }
 
-async function updateRoutine(routineId, data, userId) {
+async function updateRoutine(routineId, data, userId, timezone) {
     try {
         routineId = Number(routineId);
         userId = Number(userId);
@@ -107,12 +119,23 @@ async function updateRoutine(routineId, data, userId) {
         validateRoutineFields(data);
         validateRoutineTimes(data.times);
 
+        const isTemporary = !!data.isTemporary;
+        let startDate = null;
+        let endDate = null;
+        if (isTemporary) {
+            const today = getTodayForTimezone(timezone);
+            ({ startDate, endDate } = validateTemporaryWindow(data, today));
+        }
+
         const updated = await routineRepository.updateById(routineId, {
             type: data.type,
             title: data.title,
             description: data.description,
             times: data.times,
             daysOfWeek: data.daysOfWeek,
+            isTemporary,
+            startDate,
+            endDate
         });
 
         await auditLogRepository.create({
