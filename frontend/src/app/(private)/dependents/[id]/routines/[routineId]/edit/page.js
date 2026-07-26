@@ -42,6 +42,9 @@ function EditRoutineContent() {
   const [description, setDescription] = useState('');
   const [times, setTimes] = useState(['']);
   const [daysOfWeek, setDaysOfWeek] = useState([]);
+  const [isTemporary, setIsTemporary] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [durationDays, setDurationDays] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -54,6 +57,9 @@ function EditRoutineContent() {
       setDescription(routine.description || '');
       setTimes(routine.times?.length ? routine.times : ['']);
       setDaysOfWeek(routine.daysOfWeek || []);
+      setIsTemporary(!!routine.isTemporary);
+      setStartDate(routine.startDate ? routine.startDate.slice(0, 10) : '');
+      setDurationDays(routine.durationDays != null ? String(routine.durationDays) : '');
     } catch {
       setError('Erro ao carregar rotina.');
     } finally {
@@ -112,6 +118,18 @@ function EditRoutineContent() {
       return;
     }
 
+    if (isTemporary) {
+      if (!startDate) {
+        setError('Informe a data de início da rotina temporária.');
+        return;
+      }
+      const days = Number(durationDays);
+      if (!Number.isInteger(days) || days < 1 || days > 365) {
+        setError('Quantidade de dias deve ser um número inteiro entre 1 e 365.');
+        return;
+      }
+    }
+
     setSaving(true);
     setError('');
 
@@ -123,6 +141,13 @@ function EditRoutineContent() {
         daysOfWeek,
       };
       if (description.trim()) body.description = description.trim();
+      if (isTemporary) {
+        body.isTemporary = true;
+        body.startDate = startDate;
+        body.durationDays = Number(durationDays);
+      } else {
+        body.isTemporary = false;
+      }
 
       await apiFetch(`/routines/${routineId}`, {
         method: 'PUT',
@@ -277,6 +302,58 @@ function EditRoutineContent() {
               Dias úteis
             </button>
           </div>
+        </div>
+
+        {/* Rotina temporária */}
+        <div>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700">
+              Rotina temporária
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsTemporary(!isTemporary)}
+              aria-pressed={isTemporary}
+              className={`relative w-11 h-6 rounded-full transition-colors ${
+                isTemporary ? 'bg-blue-600' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                  isTemporary ? 'translate-x-5' : ''
+                }`}
+              />
+            </button>
+          </div>
+
+          {isTemporary && (
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Data de início *
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantidade de dias *
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={durationDays}
+                  onChange={(e) => setDurationDays(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}

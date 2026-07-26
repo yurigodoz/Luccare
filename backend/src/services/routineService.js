@@ -3,9 +3,9 @@ const dependentUserRepository = require('../repositories/dependentUserRepository
 const auditLogRepository = require('../repositories/auditLogRepository');
 const prisma = require('../database/prisma');
 const BusinessError = require('../errors/BusinessError');
-const { getUTCToday, isValidTimeString } = require('../utils/dateUtils');
+const { getUTCToday, getTodayForTimezone, isValidTimeString, parseDate, isValidDateString, computeEndDate } = require('../utils/dateUtils');
 
-async function createRoutine(data, dependentId, userId) {
+async function createRoutine(data, dependentId, userId, timezone) {
     try {
         dependentId = Number(dependentId);
         userId = Number(userId);
@@ -23,6 +23,14 @@ async function createRoutine(data, dependentId, userId) {
         validateRoutineFields(data);
         validateRoutineTimes(data.times);
 
+        const isTemporary = !!data.isTemporary;
+        let startDate = null;
+        let endDate = null;
+        if (isTemporary) {
+            const today = getTodayForTimezone(timezone);
+            ({ startDate, endDate } = validateTemporaryWindow(data, today));
+        }
+
         const routine = await routineRepository.create({
             dependentId,
             type: data.type,
@@ -31,7 +39,10 @@ async function createRoutine(data, dependentId, userId) {
             times: data.times,
             daysOfWeek: data.daysOfWeek,
             active: true,
-            createdBy: userId
+            createdBy: userId,
+            isTemporary,
+            startDate,
+            endDate
         });
 
         await auditLogRepository.create({
@@ -51,13 +62,14 @@ async function createRoutine(data, dependentId, userId) {
     }
 }
 
-async function listRoutines(dependentId, userId) {
+async function listRoutines(dependentId, userId, timezone) {
     try {
         const link = await dependentUserRepository.findLink(dependentId, userId);
 
         if (!link) throw new BusinessError('Você não tem acesso a este dependente');
 
-        return routineRepository.findByDependent(dependentId);
+        const today = getTodayForTimezone(timezone);
+        return routineRepository.findByDependent(dependentId, today);
     } catch (err) {
         if (err instanceof BusinessError) throw err;
 
@@ -88,7 +100,7 @@ async function getRoutine(routineId, userId) {
     }
 }
 
-async function updateRoutine(routineId, data, userId) {
+async function updateRoutine(routineId, data, userId, timezone) {
     try {
         routineId = Number(routineId);
         userId = Number(userId);
@@ -107,12 +119,23 @@ async function updateRoutine(routineId, data, userId) {
         validateRoutineFields(data);
         validateRoutineTimes(data.times);
 
+        const isTemporary = !!data.isTemporary;
+        let startDate = null;
+        let endDate = null;
+        if (isTemporary) {
+            const today = getTodayForTimezone(timezone);
+            ({ startDate, endDate } = validateTemporaryWindow(data, today));
+        }
+
         const updated = await routineRepository.updateById(routineId, {
             type: data.type,
             title: data.title,
             description: data.description,
             times: data.times,
             daysOfWeek: data.daysOfWeek,
+            isTemporary,
+            startDate,
+            endDate
         });
 
         await auditLogRepository.create({
@@ -241,6 +264,31 @@ function validateRoutineTimes(times) {
             throw new BusinessError(`Horário inválido: "${time}". Use o formato HH:mm.`);
         }
     }
+}
+
+/**
+ * Valida os campos de janela temporal (startDate/durationDays) e calcula endDate.
+ * Usada por createRoutine e updateRoutine quando isTemporary=true.
+ */
+function validateTemporaryWindow(data, today) {
+    if (!isValidDateString(data.startDate)) {
+        throw new BusinessError('Data de início inválida. Use o formato YYYY-MM-DD.');
+    }
+    if (!Number.isInteger(data.durationDays) || data.durationDays < 1) {
+        throw new BusinessError('Quantidade de dias deve ser um número inteiro maior ou igual a 1.');
+    }
+    if (data.durationDays > 365) {
+        throw new BusinessError('Quantidade de dias não pode ser maior que 365.');
+    }
+
+    const startDate = parseDate(data.startDate);
+    const endDate = computeEndDate(startDate, data.durationDays);
+
+    if (endDate < today) {
+        throw new BusinessError('O período informado já teria terminado. Ajuste a data de início ou a quantidade de dias.');
+    }
+
+    return { startDate, endDate };
 }
 
 module.exports = {

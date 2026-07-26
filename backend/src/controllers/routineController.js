@@ -46,9 +46,22 @@ const routineService = require('../services/routineService');
  *                 example: [0, 1, 2, 3, 4, 5, 6]
  *                 items:
  *                   type: integer
+ *               isTemporary:
+ *                 type: boolean
+ *                 description: Se true, exige startDate e durationDays; endDate é calculado pelo servidor.
+ *                 example: false
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Obrigatório quando isTemporary=true. Formato YYYY-MM-DD.
+ *                 example: "2026-07-25"
+ *               durationDays:
+ *                 type: integer
+ *                 description: Obrigatório quando isTemporary=true. Entre 1 e 365.
+ *                 example: 5
  *     responses:
  *       201:
- *         description: Rotina criada com sucesso
+ *         description: Rotina criada com sucesso. Quando isTemporary=true, a resposta inclui endDate (calculado) e durationDays.
  *       403:
  *         description: Usuário sem permissão para este dependente
  */
@@ -59,7 +72,8 @@ async function create(req, res, next) {
         const routine = await routineService.createRoutine(
             req.body,
             Number(dependentId),
-            req.userId
+            req.userId,
+            req.timezone
         );
         res.status(201).json(routine);
     } catch (err) {
@@ -83,7 +97,7 @@ async function create(req, res, next) {
  *           type: integer
  *     responses:
  *       200:
- *         description: Lista de rotinas
+ *         description: Lista de rotinas. Rotinas temporárias expiradas são omitidas; rotinas temporárias dentro da janela incluem durationDays e daysRemaining.
  *       403:
  *         description: Usuário sem permissão para este dependente
  */
@@ -93,7 +107,8 @@ async function list(req, res, next) {
         const { dependentId } = req.params;
         const routines = await routineService.listRoutines(
             Number(dependentId),
-            req.userId
+            req.userId,
+            req.timezone
         );
         res.json(routines);
     } catch (err) {
@@ -178,6 +193,19 @@ async function getById(req, res, next) {
  *                 example: [0, 1, 2, 3, 4, 5, 6]
  *                 items:
  *                   type: integer
+ *               isTemporary:
+ *                 type: boolean
+ *                 description: true converte/mantém a rotina como temporária (exige startDate e durationDays); false converte/mantém como permanente (limpa startDate/endDate).
+ *                 example: false
+ *               startDate:
+ *                 type: string
+ *                 format: date
+ *                 description: Obrigatório quando isTemporary=true. Formato YYYY-MM-DD.
+ *                 example: "2026-07-25"
+ *               durationDays:
+ *                 type: integer
+ *                 description: Obrigatório quando isTemporary=true. Entre 1 e 365.
+ *                 example: 5
  *     responses:
  *       200:
  *         description: Rotina atualizada com sucesso
@@ -192,7 +220,8 @@ async function update(req, res, next) {
         const routine = await routineService.updateRoutine(
             Number(req.params.id),
             req.body,
-            req.userId
+            req.userId,
+            req.timezone
         );
         res.json(routine);
     } catch (err) {

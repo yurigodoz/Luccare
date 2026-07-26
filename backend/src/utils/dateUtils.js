@@ -60,10 +60,36 @@ function isValidTimeString(timeStr) {
     return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
 }
 
+/**
+ * Soma dias a uma data UTC-meia-noite (aceita valores negativos).
+ */
+function addDays(date, days) {
+    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + days));
+}
+
+/**
+ * Calcula a data de término (inclusiva) de uma janela temporal a partir da
+ * data de início e da quantidade de dias.
+ */
+function computeEndDate(startDate, durationDays) {
+    return addDays(startDate, durationDays - 1);
+}
+
+/**
+ * Diferença em dias inteiros entre duas datas UTC-meia-noite (endDate - today).
+ */
+function computeDaysRemaining(endDate, today) {
+    const msPerDay = 24 * 60 * 60 * 1000;
+    return Math.round((endDate.getTime() - today.getTime()) / msPerDay);
+}
+
 module.exports = {
     getTodayForTimezone,
     getUTCToday,
     parseDate,
     isValidDateString,
-    isValidTimeString
+    isValidTimeString,
+    addDays,
+    computeEndDate,
+    computeDaysRemaining
 };
