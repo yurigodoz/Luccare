@@ -1,5 +1,7 @@
 # 🧡 Luccare
 
+**🔗 App:** [luccare.godoz.dev.br](https://luccare.godoz.dev.br) · **Portfólio:** [godoz.net](https://godoz.net)
+
 Sistema de gerenciamento de rotinas e cuidados para pessoas com necessidades especiais, com foco em organização, acompanhamento e tranquilidade para famílias e cuidadores.
 
 ## 🎯 Objetivo
