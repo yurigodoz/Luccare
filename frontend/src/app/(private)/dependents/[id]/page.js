@@ -38,6 +38,21 @@ function TypeBadge({ type }) {
   );
 }
 
+function CountdownBadge({ daysRemaining }) {
+  if (daysRemaining === undefined || daysRemaining === null) return null;
+
+  let text;
+  if (daysRemaining === 0) text = 'Termina hoje';
+  else if (daysRemaining === 1) text = 'Termina amanhã';
+  else text = `Termina em ${daysRemaining} dias`;
+
+  return (
+    <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">
+      {text}
+    </span>
+  );
+}
+
 export default function DependentDetailPage() {
   return (
     <AuthGuard>
@@ -113,6 +128,9 @@ function DependentDetailContent() {
                   {routine.title}
                 </h2>
                 <TypeBadge type={routine.type} />
+                {routine.isTemporary && (
+                  <CountdownBadge daysRemaining={routine.daysRemaining} />
+                )}
               </div>
               <span className="text-gray-400 text-sm flex-shrink-0 ml-2">
                 {expandedId === routine.id ? '▲' : '▼'}
