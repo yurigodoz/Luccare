@@ -3,7 +3,7 @@ const dependentUserRepository = require('../repositories/dependentUserRepository
 const auditLogRepository = require('../repositories/auditLogRepository');
 const prisma = require('../database/prisma');
 const BusinessError = require('../errors/BusinessError');
-const { getUTCToday, isValidTimeString } = require('../utils/dateUtils');
+const { getUTCToday, isValidTimeString, parseDate, isValidDateString, computeEndDate } = require('../utils/dateUtils');
 
 async function createRoutine(data, dependentId, userId) {
     try {
@@ -241,6 +241,31 @@ function validateRoutineTimes(times) {
             throw new BusinessError(`Horário inválido: "${time}". Use o formato HH:mm.`);
         }
     }
+}
+
+/**
+ * Valida os campos de janela temporal (startDate/durationDays) e calcula endDate.
+ * Usada por createRoutine e updateRoutine quando isTemporary=true.
+ */
+function validateTemporaryWindow(data, today) {
+    if (!isValidDateString(data.startDate)) {
+        throw new BusinessError('Data de início inválida. Use o formato YYYY-MM-DD.');
+    }
+    if (!Number.isInteger(data.durationDays) || data.durationDays < 1) {
+        throw new BusinessError('Quantidade de dias deve ser um número inteiro maior ou igual a 1.');
+    }
+    if (data.durationDays > 365) {
+        throw new BusinessError('Quantidade de dias não pode ser maior que 365.');
+    }
+
+    const startDate = parseDate(data.startDate);
+    const endDate = computeEndDate(startDate, data.durationDays);
+
+    if (endDate < today) {
+        throw new BusinessError('O período informado já teria terminado. Ajuste a data de início ou a quantidade de dias.');
+    }
+
+    return { startDate, endDate };
 }
 
 module.exports = {

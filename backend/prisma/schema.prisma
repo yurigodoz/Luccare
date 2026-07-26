@@ -64,6 +64,9 @@ model Routine {
   title       String
   description String?
   active      Boolean     @default(true)
+  isTemporary Boolean     @default(false)
+  startDate   DateTime?   @db.Date
+  endDate     DateTime?   @db.Date
   createdBy   Int
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
