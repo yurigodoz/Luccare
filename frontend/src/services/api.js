@@ -6,7 +6,9 @@ let refreshPromise = null;
 async function refreshAccessToken() {
     const refreshToken = localStorage.getItem('refreshToken');
     if (!refreshToken) {
-        throw new Error('Sem refresh token disponível');
+        const err = new Error('Sem refresh token disponível');
+        err.status = 401; // sem token = sessão realmente inexistente
+        throw err;
     }
 
     const response = await fetch(`${API_URL}/auth/refresh`, {
@@ -16,7 +18,9 @@ async function refreshAccessToken() {
     });
 
     if (!response.ok) {
-        throw new Error('Refresh falhou');
+        const err = new Error('Refresh falhou');
+        err.status = response.status;
+        throw err;
     }
 
     const data = await response.json();
@@ -53,10 +57,15 @@ export async function apiFetch(path, options = {}) {
             }
             newToken = await refreshPromise;
         } catch (err) {
-            if (!navigator.onLine || err instanceof TypeError) {
-                throw new Error('Sem conexão');
+            // Só desloga se o servidor REJEITOU o token (401/403).
+            // Falha de rede, servidor fora (5xx), timeout etc. são temporários:
+            // mantém a sessão e deixa a próxima tentativa resolver.
+            const isAuthRejection = err.status === 401 || err.status === 403;
+            if (!isAuthRejection) {
+                console.warn('[auth] Refresh falhou por erro temporário (sessão mantida):', err.message, 'status:', err.status, 'online:', navigator.onLine);
+                throw new Error('Sem conexão com o servidor');
             }
-            console.error('[auth] Sessão encerrada — refresh falhou:', err.message, 'path:', path, 'online:', navigator.onLine, 'at:', new Date().toISOString());
+            console.error('[auth] Sessão encerrada — refresh rejeitado:', err.message, 'path:', path, 'at:', new Date().toISOString());
             localStorage.clear();
             window.location.href = '/';
             throw new Error('Sessão expirada');

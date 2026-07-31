@@ -48,16 +48,20 @@ async function refreshToken(refreshToken) {
         });
 
         if (!response.ok) {
-            const err = await response.json();
-            throw new BusinessError(err.error || 'Token de atualização inválido!', 401);
+            const err = await response.json().catch(() => ({}));
+            // Propaga o status real do GlobalAuth: 401 = token rejeitado
+            // (frontend desloga); 5xx = falha temporária (frontend NÃO desloga).
+            const status = response.status === 401 || response.status === 403 ? 401 : 503;
+            throw new BusinessError(err.error || 'Token de atualização inválido!', status);
         }
 
         return await response.json();
     } catch (err) {
         if (err instanceof BusinessError) throw err;
 
+        // Falha de rede até o GlobalAuth: temporária, não é culpa do token.
         console.log('Erro no refreshToken Auth Service:', err);
-        throw new BusinessError('Erro ao atualizar token no serviço de autenticação!');
+        throw new BusinessError('Erro ao atualizar token no serviço de autenticação!', 503);
     }
 }
 
